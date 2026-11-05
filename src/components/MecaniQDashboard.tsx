@@ -7,14 +7,11 @@ import {
   ClipboardList,
   Users,
   Package,
-  BarChart3,
-  Settings,
   Search,
   HelpCircle,
   Bell,
   Phone,
   Mail,
-  ExternalLink,
   Check,
   Trash2,
   Plus,
@@ -31,10 +28,27 @@ import {
   QrCode,
   Camera,
   ArrowLeft,
+  ArrowUpRight,
+  Smartphone,
+  Pin,
+  Wrench,
+  Gauge,
+  Calendar,
+  AlertCircle,
+  TrendingUp,
+  Send,
+  ShieldCheck,
+  Menu,
 } from "lucide-react";
 
 // Types
 export type StageIndex = 0 | 1 | 2 | 3 | 4 | 5;
+export type NavigationTab =
+  | "Órdenes de Trabajo"
+  | "Dashboard"
+  | "Inventario"
+  | "Clientes";
+export type AccordionId = 1 | 2 | 3 | 4;
 
 export interface StageInfo {
   id: StageIndex;
@@ -46,6 +60,7 @@ export interface StageInfo {
 export interface PartItem {
   id: string;
   description: string;
+  category: "Repuesto" | "Mano de Obra";
   quantity: number;
   unit: string;
   unitPrice: number;
@@ -55,21 +70,30 @@ export interface PartItem {
 export interface TimelineEvent {
   id: string;
   time: string;
+  actor: string;
   text: string;
   completed: boolean;
 }
 
 export interface VehicleOrder {
   id: string;
+  bayNumber: string;
   name: string;
   model: string;
+  year: string;
   plate: string;
   orderNumber: string;
+  traceId: string;
   engineSpec: string;
+  mileage: string;
+  checkInTime: string;
   ownerName: string;
   ownerFirstName: string;
   phone: string;
   email: string;
+  lastVisit: string;
+  historicalServices: number;
+  budgetApproved: boolean;
   stageIndex: StageIndex;
   activeComponent: string;
   estimatedDelivery: string;
@@ -77,6 +101,17 @@ export interface VehicleOrder {
   photoCaption: string;
   parts: PartItem[];
   timeline: TimelineEvent[];
+}
+
+export interface InventoryStockItem {
+  id: string;
+  sku: string;
+  name: string;
+  category: string;
+  stock: number;
+  minStock: number;
+  unit: string;
+  unitPrice: number;
 }
 
 export const STAGES: StageInfo[] = [
@@ -96,7 +131,7 @@ export const STAGES: StageInfo[] = [
     id: 2,
     label: "En Reparación",
     percentage: 65,
-    defaultNote: "Reparación en progreso",
+    defaultNote: "Reparación mecánica activa en bahía",
   },
   {
     id: 3,
@@ -121,18 +156,26 @@ export const STAGES: StageInfo[] = [
 const INITIAL_VEHICLES: VehicleOrder[] = [
   {
     id: "focus-ae123cd",
+    bayNumber: "Bahía 01",
     name: "Ford Focus (AE 123 CD)",
     model: "Ford Focus",
+    year: "2021",
     plate: "AE 123 CD",
-    orderNumber: "OT-2026-104",
-    engineSpec: "Motor 2.0L Duratec · 68.400 km",
+    orderNumber: "#OT-2026-104",
+    traceId: "TRK-BOX-104",
+    engineSpec: "2.0L Duratec",
+    mileage: "68.400 km",
+    checkInTime: "08:15 hs",
     ownerName: "Luis Pérez",
     ownerFirstName: "LUIS",
     phone: "(116) 656 1670",
     email: "luisperez@gmail.com",
+    lastVisit: "05 Nov 2026",
+    historicalServices: 6,
+    budgetApproved: true,
     stageIndex: 2, // En Reparación (65%)
     activeComponent: "Embrague",
-    estimatedDelivery: "Miércoles 14:00hs",
+    estimatedDelivery: "Miércoles 14:00 hs",
     photoUrl:
       "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=900&q=85",
     photoCaption: "Reemplazo de Kit de Embrague y revisión de carcasa",
@@ -140,14 +183,16 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
       {
         id: "p1",
         description: "Kit Embrague",
+        category: "Repuesto",
         quantity: 1,
-        unit: "",
+        unit: "u.",
         unitPrice: 180000,
         status: "Instalado",
       },
       {
         id: "p2",
         description: "Mano de Obra",
+        category: "Mano de Obra",
         quantity: 3,
         unit: "hrs",
         unitPrice: 25000,
@@ -156,6 +201,7 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
       {
         id: "p3",
         description: "Aceite Transmisión",
+        category: "Repuesto",
         quantity: 2,
         unit: "L",
         unitPrice: 15000,
@@ -165,38 +211,49 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
     timeline: [
       {
         id: "t1",
-        time: "12:00",
-        text: "Reparación en progreso - Embrague (Carlos García)",
+        time: "12:00 hs",
+        actor: "Carlos García",
+        text: "Reparación en progreso — Desmontaje y reemplazo de Kit de Embrague",
         completed: true,
       },
       {
         id: "t2",
-        time: "09:30",
-        text: "Diagnóstico completo - Falla en embrague detectada",
+        time: "09:30 hs",
+        actor: "Carlos García",
+        text: "Diagnóstico completo — Falla de desgaste en embrague detectada",
         completed: true,
       },
       {
         id: "t3",
-        time: "08:15",
-        text: "Vehículo ingresado",
+        time: "08:15 hs",
+        actor: "Recepción Taller",
+        text: "Vehículo ingresado en Bahía 01 y etiqueta BoxBox QR emitida",
         completed: false,
       },
     ],
   },
   {
     id: "gol-aa456zz",
+    bayNumber: "Bahía 02",
     name: "VW Gol Trend (AA 456 ZZ)",
     model: "VW Gol Trend",
+    year: "2019",
     plate: "AA 456 ZZ",
-    orderNumber: "OT-2026-108",
-    engineSpec: "Motor 1.6L MSI · 94.120 km",
+    orderNumber: "#OT-2026-108",
+    traceId: "TRK-BOX-108",
+    engineSpec: "1.6L MSI",
+    mileage: "94.120 km",
+    checkInTime: "08:30 hs",
     ownerName: "María Gómez",
     ownerFirstName: "MARÍA",
     phone: "(114) 892 3310",
     email: "mariagomez@gmail.com",
+    lastVisit: "05 Nov 2026",
+    historicalServices: 4,
+    budgetApproved: true,
     stageIndex: 1, // Diagnóstico (35%)
     activeComponent: "Tren Delantero y Frenos ABS",
-    estimatedDelivery: "Jueves 11:30hs",
+    estimatedDelivery: "Jueves 11:30 hs",
     photoUrl:
       "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&fit=crop&w=900&q=85",
     photoCaption: "Inspección de discos ventilados y sensores ABS",
@@ -204,14 +261,16 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
       {
         id: "g1",
         description: "Juego Pastillas de Freno Bosch",
+        category: "Repuesto",
         quantity: 1,
-        unit: "",
+        unit: "u.",
         unitPrice: 68000,
         status: "Instalado",
       },
       {
         id: "g2",
         description: "Rectificación Discos Delanteros",
+        category: "Mano de Obra",
         quantity: 2,
         unit: "u.",
         unitPrice: 22000,
@@ -220,6 +279,7 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
       {
         id: "g3",
         description: "Diagnóstico Escáner Electrónico",
+        category: "Mano de Obra",
         quantity: 1,
         unit: "srv",
         unitPrice: 35000,
@@ -229,38 +289,49 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
     timeline: [
       {
         id: "gt1",
-        time: "11:15",
-        text: "Diagnóstico en progreso - Sistema ABS (Carlos García)",
+        time: "11:15 hs",
+        actor: "Carlos García",
+        text: "Diagnóstico en curso — Escaneo electrónico de módulo ABS",
         completed: true,
       },
       {
         id: "gt2",
-        time: "09:00",
-        text: "Recepción e inspección de tren delantero",
+        time: "09:00 hs",
+        actor: "Carlos García",
+        text: "Inspección inicial de tren delantero y medición de espesor de discos",
         completed: true,
       },
       {
         id: "gt3",
-        time: "08:30",
-        text: "Vehículo ingresado",
+        time: "08:30 hs",
+        actor: "Recepción Taller",
+        text: "Vehículo ingresado en Bahía 02 y etiqueta BoxBox QR emitida",
         completed: false,
       },
     ],
   },
   {
     id: "hilux-af890xy",
+    bayNumber: "Bahía 03",
     name: "Toyota Hilux (AF 890 XY)",
     model: "Toyota Hilux",
+    year: "2022",
     plate: "AF 890 XY",
-    orderNumber: "OT-2026-112",
-    engineSpec: "Motor 2.8L TDI 4x4 · 50.200 km",
-    ownerName: "Roberto Sánchez",
+    orderNumber: "#OT-2026-112",
+    traceId: "TRK-BOX-112",
+    engineSpec: "2.8L TDI 4x4",
+    mileage: "50.200 km",
+    checkInTime: "08:00 hs",
+    ownerName: "Roberto Díaz",
     ownerFirstName: "ROBERTO",
     phone: "(115) 421 9088",
-    email: "rsanchez@agro.com.ar",
+    email: "rdiaz@agro.com.ar",
+    lastVisit: "05 Nov 2026",
+    historicalServices: 9,
+    budgetApproved: true,
     stageIndex: 4, // Control Final (92%)
     activeComponent: "Kit Distribución y Service 50k",
-    estimatedDelivery: "Hoy 18:00hs",
+    estimatedDelivery: "Hoy 18:00 hs",
     photoUrl:
       "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=900&q=85",
     photoCaption: "Control final de tensión de correa e inyección",
@@ -268,14 +339,16 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
       {
         id: "h1",
         description: "Kit Distribución Original Toyota",
+        category: "Repuesto",
         quantity: 1,
-        unit: "",
+        unit: "u.",
         unitPrice: 245000,
         status: "Instalado",
       },
       {
         id: "h2",
         description: "Aceite Sintético 5W-30 + Filtros",
+        category: "Repuesto",
         quantity: 8,
         unit: "L",
         unitPrice: 14000,
@@ -284,6 +357,7 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
       {
         id: "h3",
         description: "Mano de Obra Especializada 4x4",
+        category: "Mano de Obra",
         quantity: 4,
         unit: "hrs",
         unitPrice: 30000,
@@ -293,23 +367,89 @@ const INITIAL_VEHICLES: VehicleOrder[] = [
     timeline: [
       {
         id: "ht1",
-        time: "15:10",
-        text: "Control Final - Prueba dinámica aprobada (Carlos García)",
+        time: "15:10 hs",
+        actor: "Carlos García",
+        text: "Control Final — Prueba dinámica en ruta aprobada",
         completed: true,
       },
       {
         id: "ht2",
-        time: "11:45",
-        text: "Instalación de Kit de Distribución completada",
+        time: "11:45 hs",
+        actor: "Carlos García",
+        text: "Instalación de Kit de Distribución Original y tensores hidráulicos",
         completed: true,
       },
       {
         id: "ht3",
-        time: "08:00",
-        text: "Vehículo ingresado",
+        time: "08:00 hs",
+        actor: "Recepción Taller",
+        text: "Vehículo ingresado en Bahía 03 y etiqueta BoxBox QR emitida",
         completed: false,
       },
     ],
+  },
+];
+
+const INITIAL_INVENTORY: InventoryStockItem[] = [
+  {
+    id: "inv-1",
+    sku: "LUK-620-3142",
+    name: "Kit Embrague Completo 2.0 Duratec",
+    category: "Transmisión",
+    stock: 4,
+    minStock: 2,
+    unit: "u.",
+    unitPrice: 180000,
+  },
+  {
+    id: "inv-2",
+    sku: "BSH-0986-BB0",
+    name: "Juego Pastillas de Freno Cerámicas Bosch",
+    category: "Frenos",
+    stock: 9,
+    minStock: 4,
+    unit: "u.",
+    unitPrice: 68000,
+  },
+  {
+    id: "inv-3",
+    sku: "MOT-5W30-1L",
+    name: "Aceite Sintético 5W-30 Norma Dexos2",
+    category: "Lubricantes",
+    stock: 28,
+    minStock: 12,
+    unit: "L",
+    unitPrice: 14000,
+  },
+  {
+    id: "inv-4",
+    sku: "TOY-13568-390",
+    name: "Kit Distribución Original Toyota 2.8 TDI",
+    category: "Motor",
+    stock: 2,
+    minStock: 3,
+    unit: "u.",
+    unitPrice: 245000,
+  },
+  {
+    id: "inv-5",
+    sku: "VAL-75W90-GL4",
+    name: "Aceite Transmisión Sintético 75W-90",
+    category: "Transmisión",
+    stock: 14,
+    minStock: 6,
+    unit: "L",
+    unitPrice: 15000,
+  },
+  {
+    id: "inv-6",
+    sku: "MAN-W712-95",
+    name: "Filtro de Aceite y Aire Pack Service",
+    category: "Filtros",
+    stock: 3,
+    minStock: 5,
+    unit: "u.",
+    unitPrice: 32000,
   },
 ];
 
@@ -334,7 +474,6 @@ function RealisticQrCode({
     Array(gridSize).fill(false)
   );
 
-  // Draw standard 7x7 QR Finder Pattern (outer 7x7 ring, 5x5 white ring, 3x3 solid center) + 1px quiet separator
   const placeFinderPattern = (rowOffset: number, colOffset: number) => {
     for (let r = -1; r <= 7; r++) {
       for (let c = -1; c <= 7; c++) {
@@ -354,12 +493,10 @@ function RealisticQrCode({
     }
   };
 
-  // Three corner finder squares
   placeFinderPattern(0, 0);
   placeFinderPattern(0, gridSize - 7);
   placeFinderPattern(gridSize - 7, 0);
 
-  // Standard 5x5 Alignment Pattern at bottom-right (row 16, col 16)
   for (let r = 16; r <= 20; r++) {
     for (let c = 16; c <= 20; c++) {
       reserved[r][c] = true;
@@ -369,7 +506,6 @@ function RealisticQrCode({
     }
   }
 
-  // Timing patterns (row 6 and col 6)
   for (let i = 8; i < gridSize - 8; i++) {
     reserved[6][i] = true;
     reserved[i][6] = true;
@@ -377,14 +513,12 @@ function RealisticQrCode({
     matrix[i][6] = i % 2 === 0;
   }
 
-  // Deterministic hash from vehicle seed
   let hash = 2166136261;
   for (let i = 0; i < seed.length; i++) {
     hash ^= seed.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
 
-  // Populate remaining data modules
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       if (!reserved[r][c]) {
@@ -402,7 +536,7 @@ function RealisticQrCode({
     <svg
       viewBox={`0 0 ${gridSize} ${gridSize}`}
       shapeRendering="crispEdges"
-      className={`${sizeClass} bg-white p-1.5 rounded-lg border border-[#E2E8F0] shadow-2xs shrink-0`}
+      className={`${sizeClass} bg-white p-1.5 rounded-xl border border-[#E2E8F0] shadow-2xs shrink-0`}
       aria-label="Código QR de trazabilidad BoxBox"
     >
       {matrix.map((row, rIdx) =>
@@ -423,40 +557,77 @@ function RealisticQrCode({
   );
 }
 
-// Stylized License Plate Badge (Chapa Patente Moderna)
-function LicensePlateBadge({ plate }: { plate: string }) {
+// Chapa Patente Estilo Mercosur Argentino
+function MercosurPlateBadge({
+  plate,
+  size = "md",
+}: {
+  plate: string;
+  size?: "sm" | "md";
+}) {
   return (
-    <div className="inline-flex flex-col overflow-hidden rounded-md border-2 border-[#CBD5E1] bg-white shadow-2xs shrink-0">
-      <div className="bg-[#2563EB] h-1.5 w-full flex items-center justify-center" />
-      <span className="px-2.5 py-0.5 font-mono text-xs font-extrabold tracking-widest text-[#0F172A] leading-tight">
+    <div
+      className={`inline-flex flex-col overflow-hidden rounded-md border-2 border-[#CBD5E1] bg-white shadow-2xs shrink-0 select-none ${
+        size === "sm" ? "min-w-[98px]" : "min-w-[122px]"
+      }`}
+    >
+      <div className="bg-[#1D4ED8] px-2 py-[2px] flex items-center justify-between gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
+        <span className="text-[6.5px] font-bold tracking-[0.14em] text-white uppercase leading-none">
+          REPÚBLICA ARGENTINA
+        </span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA]" />
+      </div>
+      <div
+        className={`text-center font-mono font-black tracking-[0.16em] text-[#0F172A] bg-white ${
+          size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"
+        }`}
+      >
         {plate}
-      </span>
+      </div>
     </div>
   );
 }
 
 export default function MecaniQDashboard() {
+  // Navigation & Responsive Mobile Menu states
+  const [activeTab, setActiveTab] = useState<NavigationTab>("Órdenes de Trabajo");
+  const [isBaysMenuOpen, setIsBaysMenuOpen] = useState<boolean>(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [vehicles, setVehicles] = useState<VehicleOrder[]>(INITIAL_VEHICLES);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>(
     INITIAL_VEHICLES[0].id
   );
-  const [activeNav, setActiveNav] = useState<string>("Dashboard");
+  const [inventory, setInventory] =
+    useState<InventoryStockItem[]>(INITIAL_INVENTORY);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [showAddPartModal, setShowAddPartModal] = useState<boolean>(false);
+
+  // Exclusive Accordion state (1: Estado & Telemetría, 2: Presupuesto, 3: Repuestos, 4: Bitácora)
+  const [openAccordion, setOpenAccordion] = useState<AccordionId>(1);
+
+  // Slide-over / Dockable Mobile Simulator Drawer states
+  const [isClientDrawerOpen, setIsClientDrawerOpen] = useState<boolean>(false);
+  const [isDrawerPinned, setIsDrawerPinned] = useState<boolean>(true);
   const [showBudgetInPhone, setShowBudgetInPhone] = useState<boolean>(false);
-  const [showQrModal, setShowQrModal] = useState<boolean>(false);
-  const [showOrdersDrawer, setShowOrdersDrawer] = useState<boolean>(false);
+
+  // Modals & Popovers
+  const [showQrStickerModal, setShowQrStickerModal] = useState<boolean>(false);
   const [showNotifications, setShowNotifications] = useState<boolean>(false);
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
 
-  // New part form states
+  // New part inline form state (inside Accordion 3)
   const [newDesc, setNewDesc] = useState<string>("");
+  const [newCategory, setNewCategory] = useState<"Repuesto" | "Mano de Obra">(
+    "Repuesto"
+  );
   const [newQty, setNewQty] = useState<string>("1");
   const [newUnit, setNewUnit] = useState<string>("u.");
   const [newPrice, setNewPrice] = useState<string>("");
-  const [newStatus] = useState<"Instalado" | "En progreso">("En progreso");
 
-  // Toast message state
+  // New mechanic note input state (inside Accordion 4)
+  const [mechanicNoteInput, setMechanicNoteInput] = useState<string>("");
+
+  // Toast state
   const [toast, setToast] = useState<{
     title: string;
     subtitle?: string;
@@ -471,10 +642,10 @@ export default function MecaniQDashboard() {
     setToast({ title, subtitle, type });
     setTimeout(() => {
       setToast((prev) => (prev?.title === title ? null : prev));
-    }, 4200);
+    }, 4000);
   };
 
-  // Currently active vehicle
+  // Active vehicle & stage
   const activeVehicle = useMemo(
     () =>
       vehicles.find((v) => v.id === selectedVehicleId) || vehicles[0],
@@ -483,15 +654,42 @@ export default function MecaniQDashboard() {
 
   const currentStage = STAGES[activeVehicle.stageIndex];
 
-  // Calculate total budget for the active vehicle
-  const totalBudget = useMemo(() => {
-    return activeVehicle.parts.reduce(
-      (acc, item) => acc + item.quantity * item.unitPrice,
-      0
-    );
+  // Financial breakdown calculations
+  const financialSummary = useMemo(() => {
+    let partsSubtotal = 0;
+    let laborSubtotal = 0;
+    let installedCount = 0;
+    let inProgressCount = 0;
+
+    activeVehicle.parts.forEach((item) => {
+      const lineTotal = item.quantity * item.unitPrice;
+      if (
+        item.category === "Mano de Obra" ||
+        item.description.toLowerCase().includes("mano de obra") ||
+        item.unit === "hrs" ||
+        item.unit === "srv"
+      ) {
+        laborSubtotal += lineTotal;
+      } else {
+        partsSubtotal += lineTotal;
+      }
+      if (item.status === "Instalado") installedCount++;
+      else inProgressCount++;
+    });
+
+    const total = partsSubtotal + laborSubtotal;
+    return {
+      partsSubtotal,
+      laborSubtotal,
+      total,
+      installedCount,
+      inProgressCount,
+    };
   }, [activeVehicle.parts]);
 
-  // Search filter matching vehicles
+  const totalBudget = financialSummary.total;
+
+  // Global search results
   const matchingVehicles = useMemo(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
@@ -500,29 +698,16 @@ export default function MecaniQDashboard() {
         v.name.toLowerCase().includes(q) ||
         v.plate.toLowerCase().includes(q) ||
         v.ownerName.toLowerCase().includes(q) ||
-        v.model.toLowerCase().includes(q)
+        v.model.toLowerCase().includes(q) ||
+        v.orderNumber.toLowerCase().includes(q)
     );
   }, [vehicles, searchQuery]);
-
-  // Filtered parts if search matches part names
-  const displayedParts = useMemo(() => {
-    if (!searchQuery.trim()) return activeVehicle.parts;
-    const q = searchQuery.toLowerCase();
-    const matchesVehicle =
-      activeVehicle.name.toLowerCase().includes(q) ||
-      activeVehicle.ownerName.toLowerCase().includes(q);
-    if (matchesVehicle) return activeVehicle.parts;
-    const filtered = activeVehicle.parts.filter((p) =>
-      p.description.toLowerCase().includes(q)
-    );
-    return filtered.length > 0 ? filtered : activeVehicle.parts;
-  }, [activeVehicle, searchQuery]);
 
   // Handler: Change Stage in Stepper
   const handleStageChange = (newStageIdx: StageIndex) => {
     const stageObj = STAGES[newStageIdx];
     const now = new Date();
-    const timeStr = now.toTimeString().slice(0, 5);
+    const timeStr = now.toTimeString().slice(0, 5) + " hs";
 
     setVehicles((prev) =>
       prev.map((v) => {
@@ -530,7 +715,8 @@ export default function MecaniQDashboard() {
         const newEvent: TimelineEvent = {
           id: `ev-${Date.now()}`,
           time: timeStr,
-          text: `${stageObj.label} - ${v.activeComponent} (Carlos García)`,
+          actor: "Carlos García",
+          text: `Actualizó estado a ${stageObj.label} (${stageObj.percentage}%) — ${v.activeComponent}`,
           completed: true,
         };
         return {
@@ -543,7 +729,25 @@ export default function MecaniQDashboard() {
 
     triggerToast(
       `Estado actualizado a "${stageObj.label}" (${stageObj.percentage}%)`,
-      `Se registró en el historial de ${activeVehicle.model} (${activeVehicle.plate}) y se sincronizó con BoxBox QR.`,
+      `Bitácora de ${activeVehicle.model} (${activeVehicle.plate}) y Vista Cliente QR sincronizadas.`,
+      "info"
+    );
+  };
+
+  // Handler: Toggle Budget Approval
+  const handleToggleBudgetApproval = () => {
+    setVehicles((prev) =>
+      prev.map((v) =>
+        v.id === activeVehicle.id
+          ? { ...v, budgetApproved: !v.budgetApproved }
+          : v
+      )
+    );
+    triggerToast(
+      !activeVehicle.budgetApproved
+        ? "Presupuesto marcado como Aprobado por el Cliente"
+        : "Presupuesto cambiado a Pendiente de Aprobación",
+      `Orden ${activeVehicle.orderNumber} · Total ${formatARS(totalBudget)}`,
       "info"
     );
   };
@@ -584,13 +788,13 @@ export default function MecaniQDashboard() {
     if (target) {
       triggerToast(
         `Ítem eliminado: ${target.description}`,
-        "El presupuesto total se recalculó automáticamente.",
+        "Presupuesto recalculado en tiempo real.",
         "info"
       );
     }
   };
 
-  // Handler: Add New Part / Service
+  // Handler: Add New Part / Service inline
   const handleAddPartSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const qty = Math.max(1, Number(newQty) || 1);
@@ -598,15 +802,16 @@ export default function MecaniQDashboard() {
     if (!newDesc.trim() || price <= 0) return;
 
     const now = new Date();
-    const timeStr = now.toTimeString().slice(0, 5);
+    const timeStr = now.toTimeString().slice(0, 5) + " hs";
 
     const createdPart: PartItem = {
       id: `part-${Date.now()}`,
       description: newDesc.trim(),
+      category: newCategory,
       quantity: qty,
-      unit: newUnit === "u." ? "" : newUnit,
+      unit: newUnit,
       unitPrice: price,
-      status: newStatus,
+      status: "En progreso",
     };
 
     setVehicles((prev) =>
@@ -615,9 +820,10 @@ export default function MecaniQDashboard() {
         const newEvent: TimelineEvent = {
           id: `ev-${Date.now()}`,
           time: timeStr,
-          text: `Repuesto/Servicio agregado: ${createdPart.description} (${formatARS(
-            qty * price
-          )})`,
+          actor: "Carlos García",
+          text: `Agregó ${newCategory.toLowerCase()}: ${
+            createdPart.description
+          } (${formatARS(qty * price)})`,
           completed: true,
         };
         return {
@@ -631,256 +837,494 @@ export default function MecaniQDashboard() {
     setNewDesc("");
     setNewQty("1");
     setNewPrice("");
-    setShowAddPartModal(false);
 
     triggerToast(
-      `Agregado: ${createdPart.description}`,
-      `Nuevo total actualizado en vivo: ${formatARS(totalBudget + qty * price)}`,
+      `Ítem agregado: ${createdPart.description}`,
+      `Total actualizado en vivo: ${formatARS(totalBudget + qty * price)}`,
+      "success"
+    );
+  };
+
+  // Handler: Assign item from Inventory directly to Active Order
+  const handleAssignFromInventory = (invItem: InventoryStockItem) => {
+    if (invItem.stock <= 0) return;
+    const now = new Date();
+    const timeStr = now.toTimeString().slice(0, 5) + " hs";
+
+    setInventory((prev) =>
+      prev.map((item) =>
+        item.id === invItem.id ? { ...item, stock: item.stock - 1 } : item
+      )
+    );
+
+    const createdPart: PartItem = {
+      id: `part-inv-${Date.now()}`,
+      description: invItem.name,
+      category: "Repuesto",
+      quantity: 1,
+      unit: invItem.unit,
+      unitPrice: invItem.unitPrice,
+      status: "Instalado",
+    };
+
+    setVehicles((prev) =>
+      prev.map((v) => {
+        if (v.id !== activeVehicle.id) return v;
+        const newEvent: TimelineEvent = {
+          id: `ev-${Date.now()}`,
+          time: timeStr,
+          actor: "Pañol BoxBox",
+          text: `Asignó desde stock: ${invItem.name} (${invItem.sku})`,
+          completed: true,
+        };
+        return {
+          ...v,
+          parts: [...v.parts, createdPart],
+          timeline: [newEvent, ...v.timeline],
+        };
+      })
+    );
+
+    triggerToast(
+      `Repuesto asignado a ${activeVehicle.model} (${activeVehicle.plate})`,
+      `${invItem.name} sumado a la orden ${activeVehicle.orderNumber}.`,
+      "success"
+    );
+  };
+
+  // Handler: Add Mechanic Note in Accordion 4
+  const handleAddMechanicNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mechanicNoteInput.trim()) return;
+    const now = new Date();
+    const timeStr = now.toTimeString().slice(0, 5) + " hs";
+
+    const newEvent: TimelineEvent = {
+      id: `note-${Date.now()}`,
+      time: timeStr,
+      actor: "Carlos García",
+      text: mechanicNoteInput.trim(),
+      completed: true,
+    };
+
+    setVehicles((prev) =>
+      prev.map((v) =>
+        v.id === activeVehicle.id
+          ? { ...v, timeline: [newEvent, ...v.timeline] }
+          : v
+      )
+    );
+
+    setMechanicNoteInput("");
+    triggerToast(
+      "Observación técnica registrada en Bitácora",
+      "Disponible en el historial trazable del vehículo.",
       "success"
     );
   };
 
   // Handler: Copy tracking link
   const handleCopyLink = () => {
-    const url = `https://boxbox.app/qr/${activeVehicle.plate.replace(
-      /\s+/g,
-      "-"
-    )}`;
+    const url = `https://boxbox.app/qr/${activeVehicle.traceId}`;
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
-    triggerToast(
-      "Link de seguimiento BoxBox copiado",
-      url,
-      "success"
-    );
+    triggerToast("Link de seguimiento BoxBox QR copiado", url, "success");
   };
 
   // Handler: WhatsApp notification
   const handleWhatsAppNotify = () => {
     triggerToast(
-      `Notificación enviada a ${activeVehicle.ownerName} (${activeVehicle.phone})`,
+      `WhatsApp enviado a ${activeVehicle.ownerName} (${activeVehicle.phone})`,
       `"¡Hola ${
         activeVehicle.ownerName.split(" ")[0]
       }! Tu ${activeVehicle.model} (${activeVehicle.plate}) está en etapa: ${
         currentStage.label
-      } (${currentStage.percentage}%). Presupuesto: ${formatARS(
-        totalBudget
-      )}."`,
+      } (${currentStage.percentage}%). Seguimiento QR: boxbox.app/qr/${
+        activeVehicle.traceId
+      }"`,
       "whatsapp"
     );
   };
 
+  const latestEvent = activeVehicle.timeline[0];
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A] flex flex-col lg:flex-row font-sans selection:bg-[#EFF6FF] selection:text-[#1D4ED8]">
-      {/* ================= 1. SIDEBAR IZQUIERDO FIJO ================= */}
-      <aside className="w-full lg:w-60 bg-white border-b lg:border-b-0 lg:border-r border-[#E2E8F0] flex flex-col justify-between shrink-0 lg:min-h-screen z-20">
-        <div>
-          {/* Logo Brand: BoxBox */}
-          <div className="px-5 pt-4 pb-3.5 flex items-center gap-3 border-b border-[#E2E8F0]">
-            <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] border border-blue-200/80 flex items-center justify-center text-[#2563EB] shadow-2xs">
-              <Car className="w-6 h-6 stroke-[2.2]" />
+    /* ================= 1. CONTENEDOR RAÍZ RESPONSIVO (MOBILE SCROLL / DESKTOP ZERO-SCROLL 100VH) ================= */
+    <div className="min-h-screen lg:h-screen w-full lg:overflow-hidden flex flex-col lg:flex-row bg-[#F8FAFC] text-[#0F172A] font-sans selection:bg-[#EFF6FF] selection:text-[#1D4ED8]">
+      {/* ================= BARRA SUPERIOR MÓVIL (MOBILE TOPBAR < LG) ================= */}
+      <div className="flex lg:hidden items-center justify-between px-4 py-3 bg-white border-b border-slate-200 sticky top-0 z-40 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <img
+            src="/SVG_redondo.svg"
+            alt="Isotipo Oficial BoxBox"
+            className="w-10 h-10 rounded-lg object-contain p-0 shrink-0"
+          />
+          <div className="leading-tight">
+            <div className="flex items-center gap-1.5">
+              <span className="text-lg font-black tracking-tight text-[#0F172A]">
+                Box<span className="text-[#2563EB]">Box</span>
+              </span>
+              <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                PRO
+              </span>
             </div>
-            <div className="leading-tight">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-lg tracking-tight text-[#0F172A]">
-                  Box<span className="text-[#2563EB]">Box</span>
-                </span>
-                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200/70">
-                  PRO
-                </span>
+            <p className="text-[10px] font-semibold text-slate-500">
+              {activeVehicle.bayNumber} · {activeVehicle.plate}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsClientDrawerOpen(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#2563EB] text-white text-xs font-bold shadow-2xs cursor-pointer"
+          >
+            <Smartphone className="w-3.5 h-3.5" />
+            <span className="hidden xs:inline">Vista Cliente QR</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] hover:bg-[#EFF6FF] cursor-pointer"
+            aria-label="Abrir menú de navegación"
+          >
+            {isMobileMenuOpen ? (
+              <X className="w-5 h-5" />
+            ) : (
+              <Menu className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* BACKDROP OSCURO TRASLÚCIDO PARA DRAWER MÓVIL DEL SIDEBAR */}
+      {isMobileMenuOpen && (
+        <div
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="fixed inset-0 z-40 backdrop-blur-sm bg-slate-900/40 lg:hidden transition-opacity"
+        />
+      )}
+
+      {/* ================= 2. SIDEBAR IZQUIERDO RESPONSIVO (DRAWER EN MÓVIL / FIJO EN DESKTOP) ================= */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 w-72 shrink-0 bg-white border-r border-[#E2E8F0] shadow-2xl transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 lg:shadow-none flex flex-col lg:h-full justify-between overflow-hidden ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex flex-col min-h-0 flex-1 overflow-y-auto">
+          {/* Brand Header */}
+          <div className="px-4 py-3.5 flex items-center justify-between border-b border-[#E2E8F0] shrink-0">
+            <div className="flex items-center gap-3">
+              <img
+                src="/SVG_redondo.svg"
+                alt="Isotipo Oficial BoxBox"
+                className="w-14 h-14 rounded-xl object-contain p-0 shrink-0"
+              />
+              <div className="leading-tight">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-2xl font-black tracking-tight text-[#0F172A]">
+                    Box<span className="text-[#2563EB]">Box</span>
+                  </span>
+                  <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200/80">
+                    PRO
+                  </span>
+                </div>
+                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+                  GESTIÓN &amp; TRAZABILIDAD QR
+                </p>
               </div>
-              <p className="text-xs font-medium text-slate-500">
-                Taller Central
-              </p>
             </div>
+
+            {/* Close button inside mobile drawer */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer"
+              aria-label="Cerrar menú"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
-          {/* Navigation Menu */}
-          <nav className="p-3 space-y-1" aria-label="Menú Principal">
-            {[
-              {
-                name: "Dashboard",
-                icon: LayoutDashboard,
-                badge: null,
-                subItem: null,
-              },
-              {
-                name: "Órdenes de Trabajo",
-                icon: ClipboardList,
-                badge: "18",
-                subItem: "Lista Activa",
-              },
-              { name: "Clientes", icon: Users, badge: null, subItem: null },
-              { name: "Inventario", icon: Package, badge: null, subItem: null },
-              { name: "Reportes", icon: BarChart3, badge: null, subItem: null },
-              {
-                name: "Configuraciones",
-                icon: Settings,
-                badge: null,
-                subItem: null,
-              },
-            ].map((item) => {
-              const Icon = item.icon;
-              const isActive = activeNav === item.name;
-              return (
-                <div key={item.name}>
+          {/* Navigation Menu + Collapsible Bays Sub-Menu (Tree-View) */}
+          <div className="p-3 space-y-1">
+            <p className="px-2.5 pb-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              Estación Operativa
+            </p>
+
+            {/* Primary Item: Órdenes de Trabajo + Tree-View Toggle */}
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activeTab === "Órdenes de Trabajo") {
+                    setIsBaysMenuOpen((prev) => !prev);
+                  } else {
+                    setActiveTab("Órdenes de Trabajo");
+                    setIsBaysMenuOpen(true);
+                  }
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all cursor-pointer ${
+                  activeTab === "Órdenes de Trabajo"
+                    ? "bg-[#EFF6FF] text-[#1D4ED8] shadow-2xs ring-1 ring-[#2563EB]/20"
+                    : "text-slate-600 hover:bg-[#F8FAFC] hover:text-[#0F172A]"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                      activeTab === "Órdenes de Trabajo"
+                        ? "bg-[#2563EB] text-white"
+                        : "bg-[#F8FAFC] text-slate-500 border border-[#E2E8F0]"
+                    }`}
+                  >
+                    <ClipboardList className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold text-[#0F172A] whitespace-nowrap">
+                    Órdenes de Trabajo
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white text-[#1D4ED8] border border-blue-200">
+                    {vehicles.length}
+                  </span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                      isBaysMenuOpen ? "rotate-0" : "-rotate-90"
+                    }`}
+                  />
+                </div>
+              </button>
+
+              {/* Tree-View Sub-Menu: Bahías / Órdenes Activas */}
+              {isBaysMenuOpen && (
+                <div className="mt-1.5 ml-3.5 pl-3 border-l-2 border-[#E2E8F0] space-y-1">
+                  {vehicles.map((v) => {
+                    const isSelected =
+                      v.id === activeVehicle.id &&
+                      activeTab === "Órdenes de Trabajo";
+                    const st = STAGES[v.stageIndex];
+                    return (
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedVehicleId(v.id);
+                          setActiveTab("Órdenes de Trabajo");
+                          setShowBudgetInPhone(false);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full px-2.5 py-2 rounded-xl text-left transition-all cursor-pointer flex flex-col gap-1 ${
+                          isSelected
+                            ? "bg-[#EFF6FF]/90 border border-[#2563EB]/40 shadow-2xs"
+                            : "hover:bg-[#F8FAFC] border border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span
+                              className={`w-2 h-2 rounded-full shrink-0 ${
+                                isSelected
+                                  ? "bg-[#2563EB] ring-2 ring-blue-200"
+                                  : "bg-slate-300"
+                              }`}
+                            />
+                            <span
+                              className={`text-xs truncate ${
+                                isSelected
+                                  ? "font-extrabold text-[#0F172A]"
+                                  : "font-semibold text-slate-600"
+                              }`}
+                            >
+                              {v.bayNumber} · {v.model}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pl-4">
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white text-[#0F172A] border border-[#CBD5E1]">
+                            {v.plate}
+                          </span>
+                          <span
+                            className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${
+                              isSelected
+                                ? "bg-[#2563EB] text-white"
+                                : "bg-slate-100 text-[#1D4ED8]"
+                            }`}
+                          >
+                            {st.percentage}%
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Other Functional Sidebar Tabs */}
+            <div className="pt-2 space-y-1">
+              <p className="px-2.5 pb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Gestión General
+              </p>
+              {(
+                [
+                  {
+                    name: "Dashboard" as NavigationTab,
+                    icon: LayoutDashboard,
+                    badge: "KPIs",
+                  },
+                  {
+                    name: "Inventario" as NavigationTab,
+                    icon: Package,
+                    badge: "Pañol",
+                  },
+                  {
+                    name: "Clientes" as NavigationTab,
+                    icon: Users,
+                    badge: "3",
+                  },
+                ] as const
+              ).map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.name;
+                return (
                   <button
+                    key={item.name}
+                    type="button"
                     onClick={() => {
-                      setActiveNav(item.name);
-                      if (item.name === "Órdenes de Trabajo") {
-                        setShowOrdersDrawer(true);
-                      }
+                      setActiveTab(item.name);
+                      setIsMobileMenuOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-all cursor-pointer ${
                       isActive
-                        ? "bg-[#EFF6FF] text-[#1D4ED8] font-semibold shadow-2xs ring-1 ring-[#2563EB]/15"
+                        ? "bg-[#EFF6FF] text-[#1D4ED8] shadow-2xs ring-1 ring-[#2563EB]/20"
                         : "text-slate-600 hover:bg-[#F8FAFC] hover:text-[#0F172A]"
                     }`}
                   >
-                    <span className="flex items-center gap-3">
-                      <Icon
-                        className={`w-4 h-4 ${
-                          isActive ? "text-[#2563EB]" : "text-slate-400"
-                        }`}
-                      />
-                      {item.name}
-                    </span>
-                    {item.badge && (
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
                           isActive
                             ? "bg-[#2563EB] text-white"
-                            : "bg-[#EFF6FF] text-[#1D4ED8]"
+                            : "bg-[#F8FAFC] text-slate-500 border border-[#E2E8F0]"
                         }`}
                       >
-                        {item.badge}
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span
+                        className={`text-xs ${
+                          isActive
+                            ? "font-bold text-[#0F172A]"
+                            : "font-semibold"
+                        }`}
+                      >
+                        {item.name}
                       </span>
-                    )}
-                  </button>
-                  {item.subItem && (
-                    <button
-                      onClick={() => setShowOrdersDrawer(true)}
-                      className="ml-10 mt-0.5 mb-1 text-xs font-medium text-slate-400 hover:text-[#2563EB] transition-colors flex items-center gap-1 cursor-pointer"
+                    </div>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                        isActive
+                          ? "bg-white text-[#1D4ED8] border border-blue-200"
+                          : "bg-[#F8FAFC] text-slate-500 border border-[#E2E8F0]"
+                      }`}
                     >
-                      <span>• {item.subItem}</span>
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </nav>
-        </div>
-
-        {/* Bottom Mechanic Profile & Secondary Logo */}
-        <div className="p-4 border-t border-[#E2E8F0] bg-[#F8FAFC] space-y-3">
-          <div className="flex items-center gap-2.5 px-1">
-            <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] border border-blue-200/60 flex items-center justify-center text-[#2563EB]">
-              <Car className="w-4 h-4" />
-            </div>
-            <div className="leading-none">
-              <p className="text-xs font-bold text-[#0F172A]">
-                BoxBox · Taller Central
-              </p>
-              <p className="text-[11px] text-slate-500 mt-0.5">
-                Sucursal Principal · Bahías 1-6
-              </p>
+                      {item.badge}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center justify-between pt-2.5 border-t border-[#E2E8F0]">
-            <div className="flex items-center gap-2.5">
-              <div className="relative">
-                <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#1D4ED8] to-[#3B82F6] text-white font-bold text-xs flex items-center justify-center shadow-2xs">
-                  CG
-                </div>
-                <span
-                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#2563EB] ring-2 ring-white"
-                  title="Activo"
-                />
+        {/* Mechanic Profile Footer */}
+        <div className="p-3.5 border-t border-[#E2E8F0] bg-white shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-[#1D4ED8] text-white font-bold text-xs flex items-center justify-center shadow-2xs">
+                CG
               </div>
-              <div className="leading-tight">
-                <p className="text-xs font-bold text-[#0F172A]">
-                  Carlos García
-                </p>
-                <p className="text-[11px] text-slate-500 font-medium">
-                  Mecánico Jefe
-                </p>
-              </div>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#2563EB] ring-2 ring-white"
+                title="En turno"
+              />
             </div>
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <div className="leading-tight min-w-0">
+              <p className="text-xs font-bold text-[#0F172A] truncate">
+                Carlos García
+              </p>
+              <p className="text-[11px] text-slate-500 font-medium truncate">
+                Mecánico Jefe · Taller Central
+              </p>
+            </div>
           </div>
         </div>
       </aside>
 
-      {/* ================= CONTENEDOR PRINCIPAL ================= */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* HEADER SUPERIOR */}
-        <header className="bg-white px-6 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-[#E2E8F0]">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] font-extrabold text-xs border border-blue-200/80">
-                BoxBox
-              </span>
-              <h1 className="text-lg md:text-xl font-extrabold text-[#0F172A] tracking-tight">
-                Gestión de Reparaciones - Taller Mecánica Central
-              </h1>
-            </div>
-            <p className="text-xs text-slate-500 font-medium mt-0.5 flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#2563EB]" />
-              Órdenes Activas: 18 Vehículos en Taller
-              <span className="text-slate-300">|</span>
-              <span className="text-[#1D4ED8] font-semibold">
-                Trazabilidad BoxBox QR en Vivo
-              </span>
-            </p>
+      {/* ================= 3. ÁREA PRINCIPAL (RESPONSIVE SCROLL EN MÓVIL / ZERO-SCROLL EN DESKTOP) ================= */}
+      <div className="flex-1 flex flex-col lg:h-full min-w-0 lg:overflow-hidden">
+        {/* HEADER SUPERIOR COMPACTO Y RESPONSIVO */}
+        <header className="bg-white px-4 lg:px-5 py-3 lg:py-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] shrink-0 z-20">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs font-extrabold text-[#1D4ED8] bg-[#EFF6FF] px-2.5 py-1 rounded-lg border border-blue-200/80 shrink-0">
+              {activeTab}
+            </span>
+            <span className="text-slate-300 hidden sm:inline">/</span>
+            <h1 className="text-sm sm:text-base font-extrabold text-[#0F172A] tracking-tight truncate hidden sm:block">
+              Gestión de Reparaciones — Taller Mecánica Central
+            </h1>
+            <span className="hidden xl:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 ml-2">
+              <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
+              18 Vehículos en Taller
+            </span>
           </div>
 
-          {/* Search Bar & Header Icons */}
-          <div className="flex items-center gap-2.5 self-start md:self-auto">
-            <div className="relative w-72 sm:w-80">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          {/* Search & Quick Header Icons */}
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <div className="relative flex-1 sm:flex-initial w-full sm:w-64 lg:w-80">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por patente, cliente o modelo..."
-                className="w-full pl-9 pr-8 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs sm:text-sm text-[#0F172A] placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] transition-all"
+                placeholder="Buscar patente, cliente u orden..."
+                className="w-full pl-8 pr-7 py-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  title="Limpiar búsqueda"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
 
-              {/* Search Dropdown Results */}
               {searchQuery.trim() !== "" && matchingVehicles.length > 0 && (
-                <div className="absolute left-0 right-0 mt-1.5 bg-white rounded-xl shadow-lg border border-[#E2E8F0] py-1.5 z-40">
-                  <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    Vehículos encontrados ({matchingVehicles.length})
-                  </div>
+                <div className="absolute left-0 right-0 mt-1.5 bg-white rounded-xl shadow-xl border border-[#E2E8F0] py-1.5 z-50">
                   {matchingVehicles.map((v) => (
                     <button
                       key={v.id}
                       onClick={() => {
                         setSelectedVehicleId(v.id);
+                        setActiveTab("Órdenes de Trabajo");
                         setSearchQuery("");
                       }}
                       className="w-full px-3 py-2 text-left hover:bg-[#EFF6FF] flex items-center justify-between transition-colors cursor-pointer"
                     >
                       <div>
                         <p className="text-xs font-bold text-[#0F172A]">
-                          {v.model} · {v.plate}
+                          {v.model} ({v.plate})
                         </p>
-                        <p className="text-[11px] text-slate-500">
-                          Cliente: {v.ownerName}
+                        <p className="text-[10px] text-slate-500">
+                          {v.ownerName} · {v.orderNumber}
                         </p>
                       </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8]">
                         {STAGES[v.stageIndex].label}
                       </span>
                     </button>
@@ -891,27 +1335,27 @@ export default function MecaniQDashboard() {
 
             <button
               onClick={() => setShowHelpModal(true)}
-              className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] hover:border-blue-200 transition-colors cursor-pointer"
-              title="Guía rápida de BoxBox"
+              className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] transition-colors cursor-pointer shrink-0"
+              title="Guía de estación BoxBox PRO"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
 
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowNotifications((prev) => !prev)}
-                className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] hover:border-blue-200 transition-colors relative cursor-pointer"
-                title="Notificaciones del taller"
+                className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] transition-colors relative cursor-pointer"
+                title="Notificaciones"
               >
                 <Bell className="w-4 h-4" />
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#2563EB] ring-2 ring-white" />
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] p-3 z-40">
+                <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-[#E2E8F0] p-3 z-50">
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#E2E8F0]">
                     <span className="text-xs font-bold text-[#0F172A]">
-                      Notificaciones BoxBox
+                      Notificaciones en Vivo
                     </span>
                     <button
                       onClick={() => setShowNotifications(false)}
@@ -921,21 +1365,12 @@ export default function MecaniQDashboard() {
                     </button>
                   </div>
                   <div className="space-y-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-[#EFF6FF] border border-blue-200/70">
-                      <p className="font-semibold text-[#0F172A]">
-                        {activeVehicle.ownerName} escaneó el código QR
+                    <div className="p-2 rounded-xl bg-[#EFF6FF] border border-blue-200/70">
+                      <p className="font-bold text-[#0F172A]">
+                        {activeVehicle.ownerName} consultó BoxBox QR
                       </p>
                       <p className="text-[11px] text-slate-600 mt-0.5">
-                        Consultó el avance de {activeVehicle.model} (
-                        {activeVehicle.plate}) hace 4 min.
-                      </p>
-                    </div>
-                    <div className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                      <p className="font-semibold text-[#0F172A]">
-                        Repuesto verificado en bahía
-                      </p>
-                      <p className="text-[11px] text-slate-600 mt-0.5">
-                        Control técnico registrado por Carlos García.
+                        Sincronización activa para {activeVehicle.plate}.
                       </p>
                     </div>
                   </div>
@@ -945,867 +1380,1397 @@ export default function MecaniQDashboard() {
           </div>
         </header>
 
-        {/* ================= GRID PRINCIPAL DE 3 COLUMNAS DEL DASHBOARD ================= */}
-        <main className="flex-1 p-4 lg:p-5 grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-          {/* -------- COLUMNA IZQUIERDA (3 cols): FICHA DEL VEHÍCULO, QR REALISTA Y TIMELINE -------- */}
-          <section className="xl:col-span-3 bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs p-4 flex flex-col justify-between space-y-3.5">
-            {/* Selector Rápido de Vehículos de Prueba */}
-            <div className="bg-[#F8FAFC] p-2.5 rounded-xl border border-[#E2E8F0]">
-              <label
-                htmlFor="vehicle-selector"
-                className="text-[10px] font-bold uppercase tracking-wider text-[#1D4ED8] mb-1.5 flex items-center justify-between"
-              >
-                <span>Vehículo Activo</span>
-                <span className="text-[10px] font-semibold text-[#2563EB] bg-[#EFF6FF] px-1.5 py-0.5 rounded">
-                  3 en bahía
-                </span>
-              </label>
-              <select
-                id="vehicle-selector"
-                value={selectedVehicleId}
-                onChange={(e) => {
-                  setSelectedVehicleId(e.target.value);
-                  setShowBudgetInPhone(false);
-                }}
-                className="w-full bg-white border border-[#E2E8F0] rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#0F172A] shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB] cursor-pointer"
-              >
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.model} · {v.plate} ({v.ownerName})
-                  </option>
-                ))}
-              </select>
-            </div>
+        {/* WORKSPACE AREA + OPTIONAL DOCKED CLIENT SIMULATOR */}
+        <div className="flex-1 flex flex-col lg:flex-row lg:min-h-0 min-w-0 lg:overflow-hidden relative">
+          {/* MAIN VIEWPORT */}
+          <main className="flex-1 flex flex-col lg:h-full lg:min-h-0 min-w-0 p-3.5 sm:p-4 gap-3 lg:overflow-hidden">
+            {/* =====================================================================
+                VISTA 1: ÓRDENES DE TRABAJO (ENCABEZADO COMPACTO + 4 ACORDEONES EXCLUSIVOS)
+               ===================================================================== */}
+            {activeTab === "Órdenes de Trabajo" && (
+              <>
+                {/* 3. TARJETA DE ENCABEZADO UNIFICADA (FICHA TÉCNICA + QR ADAPTABLES) */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-white p-3.5 sm:p-4 rounded-2xl border border-[#E2E8F0] shadow-xs shrink-0">
+                  {/* Bloque Izquierdo y Central (8 columnas en lg - Ficha Técnica) */}
+                  <div className="col-span-1 lg:col-span-8 flex flex-col gap-3 min-w-0">
+                    <div className="flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <MercosurPlateBadge plate={activeVehicle.plate} />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                              {activeVehicle.bayNumber}
+                            </span>
+                            <span className="font-mono text-xs font-bold text-slate-500">
+                              {activeVehicle.orderNumber}
+                            </span>
+                          </div>
+                          <h2 className="text-base sm:text-lg font-black text-[#0F172A] tracking-tight truncate mt-0.5">
+                            {activeVehicle.model} {activeVehicle.engineSpec}
+                          </h2>
+                        </div>
+                      </div>
 
-            {/* Datos del Vehículo (Jerarquía corregida: Modelo en una sola línea limpia + Badge Patente) */}
-            <div className="space-y-1.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Vehículo
-              </span>
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <h2 className="text-lg font-extrabold text-[#0F172A] tracking-tight leading-none">
-                  {activeVehicle.model}
-                </h2>
-                <LicensePlateBadge plate={activeVehicle.plate} />
-              </div>
-              <p className="text-xs text-slate-500 pt-0.5">
-                Orden{" "}
-                <span className="font-semibold text-[#0F172A]">
-                  {activeVehicle.orderNumber}
-                </span>{" "}
-                · {activeVehicle.engineSpec}
-              </p>
-            </div>
-
-            {/* Datos del Propietario */}
-            <div className="pt-2.5 border-t border-[#E2E8F0] space-y-1.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Propietario
-              </span>
-              <a
-                href={`mailto:${activeVehicle.email}`}
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2563EB] hover:text-[#1D4ED8] hover:underline"
-              >
-                <span>{activeVehicle.ownerName}</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-
-              <div className="space-y-1 pt-0.5 text-xs text-slate-600">
-                <a
-                  href={`tel:${activeVehicle.phone.replace(/[^0-9+]/g, "")}`}
-                  className="flex items-center gap-2 hover:text-[#2563EB] transition-colors font-medium"
-                >
-                  <Phone className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />
-                  <span>{activeVehicle.phone}</span>
-                </a>
-                <a
-                  href={`mailto:${activeVehicle.email}`}
-                  className="flex items-center gap-2 hover:text-[#2563EB] transition-colors font-medium truncate"
-                >
-                  <Mail className="w-3.5 h-3.5 text-[#3B82F6] shrink-0" />
-                  <span className="truncate">{activeVehicle.email}</span>
-                </a>
-              </div>
-            </div>
-
-            {/* Bloque Código QR Realista */}
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 space-y-2.5">
-              <div className="flex items-center gap-3">
-                <RealisticQrCode
-                  seed={
-                    activeVehicle.id +
-                    "-" +
-                    activeVehicle.plate +
-                    "-" +
-                    activeVehicle.stageIndex
-                  }
-                />
-                <div className="space-y-1">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded-md border border-blue-200/80">
-                    <QrCode className="w-3 h-3 text-[#2563EB]" /> BoxBox QR
-                  </span>
-                  <p className="text-xs font-bold text-[#0F172A] leading-snug">
-                    Escanea para historial del vehículo
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    Trazabilidad en vivo 24/7
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 pt-0.5">
-                <button
-                  onClick={() => setShowQrModal(true)}
-                  className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] hover:text-[#2563EB] hover:border-[#3B82F6] hover:bg-[#EFF6FF]/50 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5 text-[#2563EB]" />
-                  <span>Imprimir QR</span>
-                </button>
-                <button
-                  onClick={handleCopyLink}
-                  className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] hover:text-[#2563EB] hover:border-[#3B82F6] hover:bg-[#EFF6FF]/50 text-[11px] font-semibold shadow-2xs transition-all cursor-pointer"
-                >
-                  <Copy className="w-3.5 h-3.5 text-[#2563EB]" />
-                  <span>Copiar Link</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Timeline de Historial */}
-            <div className="pt-2 border-t border-[#E2E8F0]">
-              <div className="flex items-center justify-between mb-2.5">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  Historial del Vehículo
-                </h3>
-                <span className="text-[11px] text-[#2563EB] font-semibold">
-                  {activeVehicle.timeline.length} registros
-                </span>
-              </div>
-
-              <div className="relative pl-1.5 space-y-3 max-h-48 overflow-y-auto pr-1">
-                {activeVehicle.timeline.map((item, idx) => {
-                  const isLast = idx === activeVehicle.timeline.length - 1;
-                  return (
-                    <div
-                      key={item.id}
-                      className="relative flex items-start gap-2.5 text-xs"
-                    >
-                      {/* Vertical connector line */}
-                      {!isLast && (
-                        <span
-                          className="absolute left-[7px] top-4 -bottom-3.5 w-[1.5px] bg-[#E2E8F0]"
-                          aria-hidden="true"
-                        />
-                      )}
-
-                      {item.completed ? (
-                        <span className="w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                          <Check className="w-2.5 h-2.5 stroke-[3]" />
-                        </span>
-                      ) : (
-                        <span className="w-4 h-4 rounded-full bg-white border-2 border-[#CBD5E1] shrink-0 mt-0.5" />
-                      )}
-
-                      <div className="leading-snug text-slate-600">
-                        <span className="font-bold text-[#0F172A]">
-                          {item.time}:
-                        </span>{" "}
-                        <span>{item.text}</span>
+                      {/* Propietario con Contacto Rápido */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2 bg-[#F8FAFC] px-3 py-1.5 rounded-xl border border-[#E2E8F0] w-full sm:w-auto">
+                        <div className="text-left sm:text-right">
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+                            Propietario
+                          </span>
+                          <span className="text-xs font-extrabold text-[#0F172A]">
+                            {activeVehicle.ownerName}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 pl-2 border-l border-[#E2E8F0]">
+                          <button
+                            type="button"
+                            onClick={handleWhatsAppNotify}
+                            title={`WhatsApp a ${activeVehicle.phone}`}
+                            className="p-1.5 rounded-lg bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white transition-colors cursor-pointer"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </button>
+                          <a
+                            href={`tel:${activeVehicle.phone.replace(
+                              /[^0-9+]/g,
+                              ""
+                            )}`}
+                            title={activeVehicle.phone}
+                            className="p-1.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-slate-600 hover:text-[#2563EB] border border-[#E2E8F0] transition-colors"
+                          >
+                            <Phone className="w-3.5 h-3.5" />
+                          </a>
+                          <a
+                            href={`mailto:${activeVehicle.email}`}
+                            title={activeVehicle.email}
+                            className="p-1.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-slate-600 hover:text-[#2563EB] border border-[#E2E8F0] transition-colors"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
 
-          {/* -------- COLUMNA CENTRAL (6 cols): KPIs COMPACTOS, STEPPER AZUL Y TABLA DE REPUESTOS -------- */}
-          <section className="xl:col-span-6 space-y-3.5">
-            {/* Fila Superior de KPIs Compactos (para que Repuestos y Servicios se vea completa sin scroll) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {/* Tarjeta 1: Volumen por Estado (Etiquetas completas sin truncar y paleta Azul) */}
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs px-4 py-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wide">
-                    Volumen por Estado
-                  </h3>
-                  <span className="text-[11px] font-semibold text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded-full">
-                    18 activos
-                  </span>
-                </div>
+                    {/* Grilla Adaptable de Píldoras de Datos Técnicos */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center gap-2">
+                        <Gauge className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
+                            Kilometraje
+                          </span>
+                          <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-0.5">
+                            {activeVehicle.mileage}
+                          </span>
+                        </div>
+                      </div>
 
-                <div className="flex items-end gap-2 h-24 pt-2">
-                  {/* Y-axis labels */}
-                  <div className="flex flex-col justify-between h-full text-[10px] text-slate-400 font-medium pr-1 pb-5">
-                    <span>200</span>
-                    <span>100</span>
-                    <span>0</span>
+                      <div className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center gap-2">
+                        <Wrench className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
+                            Motorización
+                          </span>
+                          <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-0.5">
+                            {activeVehicle.engineSpec}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center gap-2">
+                        <Clock className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
+                            Ingreso
+                          </span>
+                          <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-0.5">
+                            {activeVehicle.checkInTime}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="px-2.5 py-1.5 rounded-xl bg-[#EFF6FF]/60 border border-blue-200/80 flex items-center gap-2">
+                        <Calendar className="w-3.5 h-3.5 text-[#1D4ED8] shrink-0" />
+                        <div className="min-w-0">
+                          <span className="text-[9px] font-bold uppercase text-[#1D4ED8] block leading-none">
+                            Entrega Estimada
+                          </span>
+                          <span className="text-xs font-extrabold text-[#1D4ED8] truncate block mt-0.5">
+                            {activeVehicle.estimatedDelivery}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* 4 Bars with full readable labels ("Espera", "Diagnóstico", "Reparación", "Listo") */}
-                  <div className="flex-1 grid grid-cols-4 gap-1.5 items-end h-full">
-                    {[
-                      {
-                        label: "Espera",
-                        height: "82%",
-                        value: "142",
-                        color: "bg-[#1D4ED8]",
-                      },
-                      {
-                        label: "Diagnóstico",
-                        height: "56%",
-                        value: "86",
-                        color: "bg-[#2563EB]",
-                      },
-                      {
-                        label: "Reparación",
-                        height: "46%",
-                        value: "68",
-                        color: "bg-[#3B82F6]",
-                      },
-                      {
-                        label: "Listo",
-                        height: "28%",
-                        value: "34",
-                        color: "bg-[#60A5FA]",
-                      },
-                    ].map((bar) => (
-                      <div
-                        key={bar.label}
-                        className="flex flex-col items-center justify-end h-full group"
-                      >
-                        <div className="w-full flex-1 flex items-end justify-center border-b border-[#E2E8F0] pb-1">
-                          <div
-                            style={{ height: bar.height }}
-                            className={`w-full max-w-[30px] rounded-t-md ${bar.color} transition-all duration-200 group-hover:opacity-90 relative`}
-                          >
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-[#0F172A] text-white px-1.5 py-0.5 rounded pointer-events-none">
-                              {bar.value}
-                            </span>
-                          </div>
+                  {/* Bloque Derecho (4 columnas en lg - Recuadro QR y Vista Cliente) */}
+                  <div className="col-span-1 lg:col-span-4 w-full bg-blue-50/70 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div
+                      onClick={() => setIsClientDrawerOpen(true)}
+                      className="relative cursor-pointer shrink-0 group"
+                      title="Abrir Vista del Cliente"
+                    >
+                      <RealisticQrCode
+                        seed={
+                          activeVehicle.id +
+                          "-" +
+                          activeVehicle.traceId +
+                          "-" +
+                          activeVehicle.stageIndex
+                        }
+                        sizeClass="w-20 h-20"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="bg-white p-0.5 rounded-md shadow-2xs border border-[#E2E8F0]">
+                          <img
+                            src="/SVG_redondo.svg"
+                            alt="BoxBox QR"
+                            className="w-5 h-5 object-contain"
+                          />
                         </div>
-                        <span className="text-[10px] font-semibold text-slate-600 mt-1 whitespace-nowrap">
-                          {bar.label}
+                      </div>
+                    </div>
+
+                    <div className="w-full flex-1 min-w-0 flex flex-col justify-between gap-2">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1D4ED8]">
+                          Trazabilidad QR
+                        </span>
+                        <span className="font-mono text-[10px] font-bold bg-white text-[#0F172A] px-1.5 py-0.5 rounded border border-blue-200">
+                          {activeVehicle.traceId}
                         </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
 
-              {/* Tarjeta 2: Ingresos Mensuales (Paleta Azul Corporativa) */}
-              <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs px-4 py-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wide">
-                    Ingresos Mensuales
-                  </h3>
-                  <span className="text-[11px] font-semibold text-[#1D4ED8] bg-[#EFF6FF] border border-blue-200/60 px-2 py-0.5 rounded-full">
-                    +18.4% mes
-                  </span>
-                </div>
-
-                <div className="flex items-end gap-2 h-24 pt-2">
-                  {/* Y-axis labels */}
-                  <div className="flex flex-col justify-between h-full text-[10px] text-slate-400 font-medium pr-1 pb-5">
-                    <span>$150k</span>
-                    <span>$100k</span>
-                    <span>$0</span>
-                  </div>
-
-                  {/* Bars */}
-                  <div className="flex-1 grid grid-cols-4 gap-2 items-end h-full">
-                    {[
-                      {
-                        label: "Ago",
-                        height: "45%",
-                        value: "$64k",
-                        color: "bg-[#93C5FD]",
-                      },
-                      {
-                        label: "Sep",
-                        height: "68%",
-                        value: "$105k",
-                        color: "bg-[#60A5FA]",
-                      },
-                      {
-                        label: "Oct",
-                        height: "56%",
-                        value: "$88k",
-                        color: "bg-[#3B82F6]",
-                      },
-                      {
-                        label: "Nov",
-                        height: "88%",
-                        value: "$142k",
-                        color: "bg-[#1D4ED8]",
-                      },
-                    ].map((bar) => (
-                      <div
-                        key={bar.label}
-                        className="flex flex-col items-center justify-end h-full group"
+                      <button
+                        type="button"
+                        onClick={() => setIsClientDrawerOpen((prev) => !prev)}
+                        className="w-full py-2 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-2xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
-                        <div className="w-full flex-1 flex items-end justify-center border-b border-[#E2E8F0] pb-1">
-                          <div
-                            style={{ height: bar.height }}
-                            className={`w-full max-w-[30px] rounded-t-md ${bar.color} transition-all duration-200 group-hover:opacity-90 relative`}
-                          >
-                            <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-[#0F172A] text-white px-1.5 py-0.5 rounded pointer-events-none">
-                              {bar.value}
-                            </span>
-                          </div>
+                        <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                        <span className="truncate">Ver Vista del Cliente</span>
+                      </button>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setShowQrStickerModal(true)}
+                          className="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Printer className="w-3 h-3 text-[#2563EB]" />
+                          <span>Imprimir QR</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCopyLink}
+                          title="Copiar link de seguimiento"
+                          className="py-1.5 px-2.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold transition-colors cursor-pointer"
+                        >
+                          <Copy className="w-3 h-3 text-[#2563EB]" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 4. CONTENIDO EN 4 ACORDEONES EXCLUSIVOS (ADAPTABLES EN MÓVIL Y ZERO-SCROLL EN DESKTOP) */}
+                <section className="flex-1 lg:min-h-0 flex flex-col gap-2.5 lg:overflow-hidden">
+                  {/* ================= ACORDEÓN 1: GESTIÓN DE ESTADO Y TELEMETRÍA ================= */}
+                  {openAccordion === 1 ? (
+                    <div className="flex-1 lg:min-h-0 flex flex-col bg-white rounded-2xl border-2 border-[#2563EB]/30 shadow-xs overflow-hidden">
+                      {/* Accordion Header (Open) */}
+                      <div className="px-3.5 sm:px-4 py-2.5 bg-[#EFF6FF]/60 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-lg bg-[#2563EB] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                            1
+                          </span>
+                          <h3 className="text-xs sm:text-sm font-extrabold text-[#0F172A]">
+                            Gestión de Estado y Telemetría
+                          </h3>
                         </div>
-                        <span className="text-[10px] font-semibold text-slate-600 mt-1">
-                          {bar.label}
+                        <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-[#2563EB] text-white">
+                          {currentStage.label} · {currentStage.percentage}%
+                          Completado
                         </span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Tarjeta Central: GESTIÓN DE ESTADO (STEPPER DE 6 PASOS EN AZUL CORPORATIVO) */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs px-5 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
-                <div>
-                  <h3 className="text-sm font-bold text-[#0F172A]">
-                    Gestión de Estado
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Haz clic en cualquier etapa para actualizar el progreso en
-                    vivo
-                  </p>
-                </div>
+                      {/* Accordion Body */}
+                      <div className="flex-1 lg:min-h-0 lg:overflow-y-auto p-3.5 sm:p-4 flex flex-col justify-between gap-4">
+                        <div className="space-y-4">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <p className="text-xs font-bold text-[#0F172A]">
+                                Tarea Activa en {activeVehicle.bayNumber}:{" "}
+                                <span className="text-[#2563EB]">
+                                  {activeVehicle.activeComponent}
+                                </span>
+                              </p>
+                              <p className="text-[11px] text-slate-500">
+                                Toca cualquier etapa del Stepper para actualizar
+                                el avance en tiempo real
+                              </p>
+                            </div>
+                            <span className="text-[11px] sm:text-xs font-bold text-[#1D4ED8] bg-[#EFF6FF] px-3 py-1 rounded-lg border border-blue-200">
+                              {currentStage.defaultNote}
+                            </span>
+                          </div>
 
-                <button
-                  onClick={() => setShowBudgetInPhone(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#EFF6FF] hover:bg-blue-100/80 text-[#1D4ED8] border border-blue-200/80 text-xs font-semibold transition-colors cursor-pointer"
-                >
-                  <FileText className="w-3.5 h-3.5 text-[#2563EB]" />
-                  <span>Ver Presupuesto</span>
-                </button>
-              </div>
-
-              {/* Stepper Horizontal de 6 Pasos (Estricto Azul y Blanco) */}
-              <div className="relative pt-5 pb-1 px-1">
-                <div className="grid grid-cols-6 relative">
-                  {STAGES.map((stage, index) => {
-                    const isCompleted = index < activeVehicle.stageIndex;
-                    const isCurrent = index === activeVehicle.stageIndex;
-                    const isLastStep = index === STAGES.length - 1;
-
-                    return (
-                      <div
-                        key={stage.id}
-                        className="flex flex-col items-center relative z-10"
-                      >
-                        {/* Línea conectora hacia el siguiente paso */}
-                        {!isLastStep && (
-                          <div
-                            className="absolute top-3.5 left-1/2 w-full h-[3px] -z-10"
-                            aria-hidden="true"
-                          >
+                          {/* Barra de progreso animada */}
+                          <div className="w-full h-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full overflow-hidden">
                             <div
-                              className={`h-full transition-all duration-300 ${
-                                isCompleted
-                                  ? "bg-[#1D4ED8]"
-                                  : isCurrent
-                                  ? "bg-gradient-to-r from-[#2563EB] via-[#60A5FA] to-[#E2E8F0]"
-                                  : "bg-[#E2E8F0]"
-                              }`}
+                              style={{ width: `${currentStage.percentage}%` }}
+                              className="h-full bg-gradient-to-r from-[#1D4ED8] to-[#2563EB] transition-all duration-500 rounded-full"
                             />
                           </div>
-                        )}
 
-                        {/* Porcentaje flotante sobre el paso actual */}
-                        {isCurrent && (
-                          <span className="absolute -top-6 text-[11px] font-extrabold px-2 py-0.5 rounded-full text-[#1D4ED8] bg-[#EFF6FF] border border-blue-200 shadow-2xs">
-                            {stage.percentage}%
-                          </span>
-                        )}
+                          {/* Stepper Interactivo de 6 Etapas (2 cols en móvil, 3 en sm, 6 en md+) */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2.5">
+                            {STAGES.map((stage, index) => {
+                              const isCompleted =
+                                index < activeVehicle.stageIndex;
+                              const isCurrent =
+                                index === activeVehicle.stageIndex;
 
-                        {/* Botón Circular del Paso */}
-                        <button
-                          type="button"
-                          onClick={() => handleStageChange(stage.id)}
-                          title={`Cambiar a ${stage.label} (${stage.percentage}%)`}
-                          className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-200 cursor-pointer focus:outline-none ${
-                            isCompleted
-                              ? "bg-[#1D4ED8] text-white shadow-2xs hover:bg-[#2563EB]"
-                              : isCurrent
-                              ? "bg-[#2563EB] text-white ring-4 ring-[#DBEAFE] shadow-xs"
-                              : "bg-white border-2 border-[#CBD5E1] text-slate-400 hover:border-[#3B82F6] hover:text-[#2563EB]"
-                          }`}
-                        >
-                          {isCompleted || (isCurrent && stage.id === 5) ? (
-                            <Check className="w-3.5 h-3.5 stroke-[3]" />
-                          ) : isCurrent ? (
-                            <span className="w-2.5 h-2.5 rounded-full bg-white" />
-                          ) : (
-                            <span className="text-[10px] font-bold">
-                              {index + 1}
-                            </span>
-                          )}
-                        </button>
+                              return (
+                                <button
+                                  key={stage.id}
+                                  type="button"
+                                  onClick={() => handleStageChange(stage.id)}
+                                  className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                                    isCurrent
+                                      ? "bg-[#EFF6FF] border-2 border-[#2563EB] shadow-xs"
+                                      : isCompleted
+                                      ? "bg-[#F8FAFC] border-blue-200 hover:bg-[#EFF6FF]/50"
+                                      : "bg-white border-[#E2E8F0] hover:border-[#3B82F6]"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between w-full mb-2">
+                                    <span
+                                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-extrabold shrink-0 ${
+                                        isCompleted
+                                          ? "bg-[#1D4ED8] text-white"
+                                          : isCurrent
+                                          ? "bg-[#2563EB] text-white ring-4 ring-blue-200/70"
+                                          : "bg-[#F8FAFC] text-slate-400 border border-[#CBD5E1]"
+                                      }`}
+                                    >
+                                      {isCompleted ||
+                                      (isCurrent && stage.id === 5) ? (
+                                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                      ) : (
+                                        index + 1
+                                      )}
+                                    </span>
+                                    <span
+                                      className={`text-[10px] font-bold ${
+                                        isCurrent
+                                          ? "text-[#1D4ED8]"
+                                          : "text-slate-400"
+                                      }`}
+                                    >
+                                      {stage.percentage}%
+                                    </span>
+                                  </div>
+                                  <p
+                                    className={`text-xs leading-snug ${
+                                      isCurrent
+                                        ? "font-extrabold text-[#0F172A]"
+                                        : isCompleted
+                                        ? "font-bold text-[#1D4ED8]"
+                                        : "font-semibold text-slate-500"
+                                    }`}
+                                  >
+                                    {stage.label}
+                                  </p>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
 
-                        {/* Etiqueta del Paso */}
-                        <button
-                          type="button"
-                          onClick={() => handleStageChange(stage.id)}
-                          className={`mt-2 text-[11px] text-center leading-tight transition-colors cursor-pointer ${
-                            isCurrent
-                              ? "font-extrabold text-[#0F172A]"
-                              : isCompleted
-                              ? "font-semibold text-[#1D4ED8]"
-                              : "font-medium text-slate-500 hover:text-[#0F172A]"
-                          }`}
-                        >
-                          {stage.label}
-                        </button>
-
-                        {/* Sub-indicador de porcentaje debajo del paso actual */}
-                        {isCurrent && (
-                          <span className="text-[10px] font-extrabold mt-0.5 text-[#2563EB]">
-                            {stage.percentage}%
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Tarjeta Inferior: TABLA DE REPUESTOS Y SERVICIOS (INTERACTIVA, VISIBLE SIN SCROLL) */}
-            <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs px-5 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-[#0F172A]">
-                    Repuestos y Servicios
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Haz clic en el estado para alternar entre Instalado y En
-                    progreso
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowAddPartModal((prev) => !prev)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Agregar Repuesto / Servicio</span>
-                </button>
-              </div>
-
-              {/* Formulario Desplegable para Agregar Repuesto / Servicio en Vivo */}
-              {showAddPartModal && (
-                <form
-                  onSubmit={handleAddPartSubmit}
-                  className="mb-3 p-3 rounded-xl bg-[#EFF6FF]/70 border border-blue-200 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end"
-                >
-                  <div className="sm:col-span-4">
-                    <label className="block text-[11px] font-bold text-[#0F172A] mb-1">
-                      Descripción
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={newDesc}
-                      onChange={(e) => setNewDesc(e.target.value)}
-                      placeholder="Ej. Filtro Hidráulico / Alineación"
-                      className="w-full px-2.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
-                    />
-                  </div>
-                  <div className="sm:col-span-3">
-                    <label className="block text-[11px] font-bold text-[#0F172A] mb-1">
-                      Cant. / Unidad
-                    </label>
-                    <div className="flex gap-1">
-                      <input
-                        type="number"
-                        min={1}
-                        required
-                        value={newQty}
-                        onChange={(e) => setNewQty(e.target.value)}
-                        className="w-14 px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
-                      />
-                      <select
-                        value={newUnit}
-                        onChange={(e) => setNewUnit(e.target.value)}
-                        className="flex-1 px-1.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
-                      >
-                        <option value="u.">u.</option>
-                        <option value="hrs">hrs</option>
-                        <option value="L">L</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-[11px] font-bold text-[#0F172A] mb-1">
-                      Precio ($)
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      required
-                      value={newPrice}
-                      onChange={(e) => setNewPrice(e.target.value)}
-                      placeholder="35000"
-                      className="w-full px-2.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
-                    />
-                  </div>
-                  <div className="sm:col-span-3 flex gap-1.5">
-                    <button
-                      type="submit"
-                      className="flex-1 py-1.5 px-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs rounded-lg shadow-2xs transition-colors cursor-pointer"
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddPartModal(false)}
-                      className="py-1.5 px-2 bg-white border border-[#E2E8F0] text-slate-600 hover:bg-slate-100 text-xs font-semibold rounded-lg cursor-pointer"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* Tabla */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#E2E8F0] text-[11px] font-bold text-slate-500 uppercase tracking-wider bg-[#F8FAFC]">
-                      <th className="py-2 px-3 rounded-tl-lg">Descripción</th>
-                      <th className="py-2 px-2">Cantidad</th>
-                      <th className="py-2 px-2">Precio Unitario</th>
-                      <th className="py-2 px-2">Total</th>
-                      <th className="py-2 px-2">Estado</th>
-                      <th className="py-2 px-2 text-center rounded-tr-lg">
-                        Acción
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#E2E8F0] text-xs">
-                    {displayedParts.map((item) => {
-                      const rowTotal = item.quantity * item.unitPrice;
-                      const isInstalled = item.status === "Instalado";
-                      return (
-                        <tr
-                          key={item.id}
-                          className="hover:bg-[#F8FAFC] transition-colors"
-                        >
-                          <td className="py-2.5 px-3 font-semibold text-[#0F172A]">
-                            {item.description}
-                          </td>
-                          <td className="py-2.5 px-2 text-slate-600 font-medium">
-                            {item.quantity}
-                            {item.unit ? ` ${item.unit}` : ""}
-                          </td>
-                          <td className="py-2.5 px-2 text-slate-600 font-medium">
-                            {formatARS(item.unitPrice)}
-                          </td>
-                          <td className="py-2.5 px-2 font-bold text-[#0F172A]">
-                            {formatARS(rowTotal)}
-                          </td>
-                          <td className="py-2.5 px-2">
+                        {/* Botones Rápidos Inferiores del Acordeón 1 */}
+                        <div className="pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 w-full sm:w-auto">
                             <button
                               type="button"
-                              onClick={() => handleTogglePartStatus(item.id)}
-                              title="Clic para cambiar estado del ítem"
-                              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold transition-colors cursor-pointer ${
-                                isInstalled
-                                  ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200 hover:bg-blue-100"
-                                  : "bg-[#F8FAFC] text-[#3B82F6] border border-[#CBD5E1] hover:bg-[#EFF6FF]"
-                              }`}
+                              disabled={activeVehicle.stageIndex === 0}
+                              onClick={() =>
+                                handleStageChange(
+                                  Math.max(
+                                    0,
+                                    activeVehicle.stageIndex - 1
+                                  ) as StageIndex
+                                )
+                              }
+                              className="flex-1 sm:flex-initial px-3 py-1.5 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] disabled:opacity-40 text-xs font-bold text-[#0F172A] border border-[#E2E8F0] transition-colors cursor-pointer"
                             >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isInstalled ? "bg-[#1D4ED8]" : "bg-[#60A5FA]"
-                                }`}
-                              />
-                              {item.status}
+                              ← Etapa Anterior
                             </button>
-                          </td>
-                          <td className="py-2.5 px-2 text-center">
                             <button
                               type="button"
-                              onClick={() => handleDeletePart(item.id)}
-                              className="p-1 text-slate-400 hover:text-[#1D4ED8] hover:bg-[#EFF6FF] rounded-lg transition-colors cursor-pointer"
-                              title="Eliminar ítem"
+                              disabled={activeVehicle.stageIndex === 5}
+                              onClick={() =>
+                                handleStageChange(
+                                  Math.min(
+                                    5,
+                                    activeVehicle.stageIndex + 1
+                                  ) as StageIndex
+                                )
+                              }
+                              className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 text-xs font-bold text-white shadow-2xs transition-colors cursor-pointer"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              Avanzar Etapa →
                             </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-[#E2E8F0] bg-[#F8FAFC]">
-                      <td
-                        colSpan={3}
-                        className="py-2.5 px-3 text-xs font-extrabold text-[#0F172A] uppercase tracking-wide"
-                      >
-                        Total Presupuesto
-                      </td>
-                      <td
-                        colSpan={3}
-                        className="py-2.5 px-2 text-sm font-extrabold text-[#1D4ED8]"
-                      >
-                        {formatARS(totalBudget)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </section>
+                          </div>
 
-          {/* -------- COLUMNA DERECHA (3 cols): ÓRDENES RECIENTES LIMPIAS Y SIMULADOR "VISTA DEL CLIENTE" -------- */}
-          <section className="xl:col-span-3 space-y-3.5 flex flex-col items-center">
-            {/* Bloque Superior: "Órdenes recientes" (Fondo blanco limpio y bordes suaves #E2E8F0) */}
-            <div className="w-full bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs p-3.5 space-y-2">
-              <div className="px-1 pb-2 border-b border-[#E2E8F0] flex items-center justify-between">
-                <h3 className="text-xs font-bold text-[#0F172A]">
-                  Órdenes recientes
-                </h3>
-                <span className="text-[10px] font-semibold text-[#2563EB] bg-[#EFF6FF] px-2 py-0.5 rounded-full">
-                  Acceso rápido
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowOrdersDrawer(true)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-[#EFF6FF] border border-[#E2E8F0] hover:border-blue-200 text-xs font-semibold text-[#0F172A] transition-colors cursor-pointer"
-              >
-                <span className="flex items-center gap-2.5">
-                  <Clock className="w-4 h-4 text-[#2563EB]" />
-                  <span>Órdenes de Trabajo</span>
-                </span>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowNotifications(true)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-[#EFF6FF] border border-[#E2E8F0] hover:border-blue-200 text-xs font-semibold text-[#0F172A] transition-colors cursor-pointer"
-              >
-                <span className="flex items-center gap-2.5">
-                  <Bell className="w-4 h-4 text-[#2563EB]" />
-                  <span>Notificaciones</span>
-                </span>
-                <ChevronRight className="w-4 h-4 text-slate-400" />
-              </button>
-            </div>
-
-            {/* SIMULADOR DE CELULAR: "VISTA DEL CLIENTE" EN VIVO (GAMA AZUL CORPORATIVA) */}
-            <div className="w-full flex flex-col items-center">
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#0F172A]">
-                  VISTA DEL CLIENTE
-                </h3>
-              </div>
-
-              {/* Marco de Smartphone */}
-              <div className="w-full max-w-[292px] bg-[#0F172A] rounded-[38px] p-2.5 shadow-xl border-4 border-slate-800 relative">
-                {/* Notch superior del iPhone */}
-                <div className="w-28 h-5 bg-[#0F172A] rounded-b-2xl mx-auto absolute top-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
-                  <div className="w-10 h-1 bg-slate-700 rounded-full" />
-                </div>
-
-                {/* Pantalla interna del celular */}
-                <div className="bg-white rounded-[28px] pt-6 pb-3.5 px-3.5 text-center flex flex-col justify-between min-h-[435px] relative overflow-hidden">
-                  {/* Barra de estado móvil: BoxBox QR */}
-                  <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 px-1 mb-1.5">
-                    <span>9:41</span>
-                    <span className="text-[#2563EB] font-extrabold tracking-tight">
-                      BoxBox QR
-                    </span>
-                    <span>5G 100%</span>
-                  </div>
-
-                  {/* Encabezado de saludo personalizado al cliente */}
-                  <div className="space-y-0.5">
-                    <h4 className="text-base font-black text-[#0F172A] tracking-tight">
-                      ¡HOLA {activeVehicle.ownerFirstName}!
-                    </h4>
-                    <p className="text-xs font-bold text-slate-600">
-                      Tu {activeVehicle.model} ({activeVehicle.plate})
-                    </p>
-                  </div>
-
-                  {/* Tarjeta de Estado sincronizada en tiempo real (Gama de Azules #2563EB / #EFF6FF) */}
-                  <div className="my-2 py-2 px-3 rounded-xl bg-[#EFF6FF] border border-blue-200/80">
-                    <div className="flex items-center justify-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                      <p className="text-xs font-extrabold text-[#1D4ED8] uppercase tracking-wide">
-                        {currentStage.label}
-                      </p>
-                    </div>
-                    <p className="text-[11px] font-medium text-slate-600 mt-0.5">
-                      ({currentStage.id === 5 ? "Finalizado" : "En progreso"}:{" "}
-                      {activeVehicle.activeComponent})
-                    </p>
-
-                    {/* Barra de progreso azul dentro del celular */}
-                    <div className="w-full h-1.5 bg-blue-200/70 rounded-full overflow-hidden mt-2">
-                      <div
-                        style={{ width: `${currentStage.percentage}%` }}
-                        className="h-full bg-[#2563EB] transition-all duration-500 rounded-full"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Vista condicional dentro del celular: Foto del motor O Desglose de Presupuesto */}
-                  {!showBudgetInPhone ? (
-                    <div className="relative rounded-2xl overflow-hidden border border-[#E2E8F0] shadow-2xs group my-1">
-                      <img
-                        src={activeVehicle.photoUrl}
-                        alt={activeVehicle.photoCaption}
-                        className="w-full h-32 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-transparent to-transparent flex items-end p-2.5">
-                        <div className="text-left text-white">
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase bg-[#0F172A]/70 backdrop-blur-xs px-1.5 py-0.5 rounded mb-0.5 border border-white/15">
-                            <Camera className="w-2.5 h-2.5 text-[#60A5FA]" />{" "}
-                            Evidencia BoxBox
-                          </span>
-                          <p className="text-[10px] font-medium leading-tight line-clamp-1">
-                            {activeVehicle.photoCaption}
-                          </p>
+                          <button
+                            type="button"
+                            onClick={handleWhatsAppNotify}
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>Notificar Avance por WhatsApp</span>
+                          </button>
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="my-1 bg-[#F8FAFC] rounded-2xl border border-[#E2E8F0] p-2.5 text-left max-h-36 overflow-y-auto">
-                      <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-[#E2E8F0]">
-                        <span className="text-[10px] font-extrabold uppercase text-[#0F172A]">
-                          Detalle del Presupuesto
+                    /* Accordion 1 Collapsed Bar */
+                    <button
+                      type="button"
+                      onClick={() => setOpenAccordion(1)}
+                      className="min-h-[3.25rem] py-2 shrink-0 w-full bg-white hover:bg-[#EFF6FF]/40 rounded-xl border border-[#E2E8F0] hover:border-blue-300 px-3.5 sm:px-4 flex flex-wrap items-center justify-between gap-2 text-left transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] text-xs font-extrabold flex items-center justify-center border border-blue-200 shrink-0">
+                          1
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowBudgetInPhone(false)}
-                          className="text-[10px] font-bold text-[#2563EB] flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <ArrowLeft className="w-2.5 h-2.5" /> Foto
-                        </button>
+                        <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                          Gestión de Estado y Telemetría
+                        </span>
                       </div>
-                      <div className="space-y-1.5">
-                        {activeVehicle.parts.map((p) => (
-                          <div
-                            key={p.id}
-                            className="flex items-center justify-between text-[11px]"
-                          >
-                            <div className="truncate pr-1">
-                              <span className="font-semibold text-[#0F172A]">
-                                {p.description}
-                              </span>
-                              <span className="text-slate-400 ml-1">
-                                x{p.quantity}
-                                {p.unit}
-                              </span>
-                            </div>
-                            <span className="font-bold text-[#1D4ED8] shrink-0">
-                              {formatARS(p.quantity * p.unitPrice)}
-                            </span>
-                          </div>
-                        ))}
+                      <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                          {currentStage.label} · {currentStage.percentage}%
+                          Completado
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
                       </div>
-                    </div>
+                    </button>
                   )}
 
-                  {/* Fecha Estimada de Entrega */}
-                  <div className="my-1">
-                    <p className="text-[11px] font-medium text-slate-500">
-                      Fecha estimada de entrega
-                    </p>
-                    <p className="text-xs font-extrabold text-[#0F172A]">
-                      {activeVehicle.estimatedDelivery}
-                    </p>
+                  {/* ================= ACORDEÓN 2: PRESUPUESTO Y COSTOS ================= */}
+                  {openAccordion === 2 ? (
+                    <div className="flex-1 lg:min-h-0 flex flex-col bg-white rounded-2xl border-2 border-[#2563EB]/30 shadow-xs overflow-hidden">
+                      <div className="px-3.5 sm:px-4 py-2.5 bg-[#EFF6FF]/60 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-lg bg-[#2563EB] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                            2
+                          </span>
+                          <h3 className="text-xs sm:text-sm font-extrabold text-[#0F172A]">
+                            Presupuesto y Costos
+                          </h3>
+                        </div>
+                        <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-[#2563EB] text-white">
+                          Total: {formatARS(totalBudget)} · Mano de Obra +
+                          Repuestos
+                        </span>
+                      </div>
+
+                      <div className="flex-1 lg:min-h-0 lg:overflow-y-auto p-3.5 sm:p-4 flex flex-col justify-between gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                              Subtotal Repuestos
+                            </span>
+                            <p className="text-lg font-black text-[#0F172A] mt-1">
+                              {formatARS(financialSummary.partsSubtotal)}
+                            </p>
+                            <span className="text-[11px] text-slate-500">
+                              Insumos y piezas originales
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                              Subtotal Mano de Obra
+                            </span>
+                            <p className="text-lg font-black text-[#0F172A] mt-1">
+                              {formatARS(financialSummary.laborSubtotal)}
+                            </p>
+                            <span className="text-[11px] text-slate-500">
+                              Horas técnicas de bahía
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                              Estado de Aprobación
+                            </span>
+                            <div className="mt-1.5">
+                              <button
+                                type="button"
+                                onClick={handleToggleBudgetApproval}
+                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                                  activeVehicle.budgetApproved
+                                    ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                                    : "bg-slate-100 text-slate-700 border border-[#CBD5E1]"
+                                }`}
+                              >
+                                <ShieldCheck className="w-3.5 h-3.5 text-[#2563EB]" />
+                                {activeVehicle.budgetApproved
+                                  ? "Aprobado por QR"
+                                  : "Pendiente Firma"}
+                              </button>
+                            </div>
+                            <span className="text-[10px] text-slate-400 block mt-1">
+                              Clic para conmutar estado
+                            </span>
+                          </div>
+
+                          <div className="p-3.5 rounded-xl bg-[#EFF6FF] border border-blue-200">
+                            <span className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block">
+                              Total Final Presupuesto
+                            </span>
+                            <p className="text-xl font-black text-[#1D4ED8] mt-1">
+                              {formatARS(totalBudget)}
+                            </p>
+                            <span className="text-[11px] font-semibold text-[#2563EB]">
+                              IVA Incluido · Sincronizado QR
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setOpenAccordion(3)}
+                            className="w-full sm:w-auto px-3 py-1.5 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-xs font-bold text-[#0F172A] border border-[#E2E8F0] cursor-pointer"
+                          >
+                            Ir a Editar Ítems de Repuestos →
+                          </button>
+
+                          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsClientDrawerOpen(true);
+                                setShowBudgetInPhone(true);
+                              }}
+                              className="flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-[#1D4ED8] border border-blue-200 text-xs font-bold cursor-pointer"
+                            >
+                              Previsualizar en Celular
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                triggerToast(
+                                  `Presupuesto Digital enviado a ${activeVehicle.ownerName}`,
+                                  `Total: ${formatARS(
+                                    totalBudget
+                                  )} · Link de aprobación QR activo.`,
+                                  "whatsapp"
+                                )
+                              }
+                              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              <span>Emitir Presupuesto Digital</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Accordion 2 Collapsed Bar */
+                    <button
+                      type="button"
+                      onClick={() => setOpenAccordion(2)}
+                      className="min-h-[3.25rem] py-2 shrink-0 w-full bg-white hover:bg-[#EFF6FF]/40 rounded-xl border border-[#E2E8F0] hover:border-blue-300 px-3.5 sm:px-4 flex flex-wrap items-center justify-between gap-2 text-left transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] text-xs font-extrabold flex items-center justify-center border border-blue-200 shrink-0">
+                          2
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                          Presupuesto y Costos
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#F8FAFC] text-[#0F172A] border border-[#E2E8F0]">
+                          Total: {formatARS(totalBudget)} · Mano de Obra +
+                          Repuestos
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* ================= ACORDEÓN 3: INVENTARIO Y REPUESTOS ASIGNADOS ================= */}
+                  {openAccordion === 3 ? (
+                    <div className="flex-1 lg:min-h-0 flex flex-col bg-white rounded-2xl border-2 border-[#2563EB]/30 shadow-xs overflow-hidden">
+                      <div className="px-3.5 sm:px-4 py-2.5 bg-[#EFF6FF]/60 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-lg bg-[#2563EB] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                            3
+                          </span>
+                          <h3 className="text-xs sm:text-sm font-extrabold text-[#0F172A]">
+                            Inventario y Repuestos Asignados
+                          </h3>
+                        </div>
+                        <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-[#2563EB] text-white">
+                          {activeVehicle.parts.length} ítems asignados ·{" "}
+                          {financialSummary.installedCount} Instalados,{" "}
+                          {financialSummary.inProgressCount} En progreso
+                        </span>
+                      </div>
+
+                      <div className="flex-1 lg:min-h-0 lg:overflow-y-auto p-3.5 flex flex-col justify-between gap-3">
+                        {/* Fast Inline Add Part Bar */}
+                        <form
+                          onSubmit={handleAddPartSubmit}
+                          className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-12 gap-2 items-center shrink-0"
+                        >
+                          <div className="col-span-12 sm:col-span-4">
+                            <input
+                              type="text"
+                              required
+                              value={newDesc}
+                              onChange={(e) => setNewDesc(e.target.value)}
+                              placeholder="+ Agregar repuesto o servicio..."
+                              className="w-full px-2.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
+                            />
+                          </div>
+                          <div className="col-span-4 sm:col-span-2">
+                            <select
+                              value={newCategory}
+                              onChange={(e) =>
+                                setNewCategory(
+                                  e.target.value as "Repuesto" | "Mano de Obra"
+                                )
+                              }
+                              className="w-full px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            >
+                              <option value="Repuesto">Repuesto</option>
+                              <option value="Mano de Obra">Mano de Obra</option>
+                            </select>
+                          </div>
+                          <div className="col-span-4 sm:col-span-2 flex gap-1">
+                            <input
+                              type="number"
+                              min={1}
+                              required
+                              value={newQty}
+                              onChange={(e) => setNewQty(e.target.value)}
+                              className="w-12 px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            />
+                            <select
+                              value={newUnit}
+                              onChange={(e) => setNewUnit(e.target.value)}
+                              className="flex-1 px-1 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            >
+                              <option value="u.">u.</option>
+                              <option value="hrs">hrs</option>
+                              <option value="L">L</option>
+                            </select>
+                          </div>
+                          <div className="col-span-4 sm:col-span-2">
+                            <input
+                              type="number"
+                              min={1}
+                              required
+                              value={newPrice}
+                              onChange={(e) => setNewPrice(e.target.value)}
+                              placeholder="Precio ($)"
+                              className="w-full px-2.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            />
+                          </div>
+                          <div className="col-span-12 sm:col-span-2">
+                            <button
+                              type="submit"
+                              className="w-full py-1.5 px-3 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Sumar</span>
+                            </button>
+                          </div>
+                        </form>
+
+                        {/* Interactive Parts Table with Horizontal Scroll Protection */}
+                        <div className="overflow-x-auto w-full flex-1 lg:min-h-0">
+                          <table className="w-full min-w-[540px] text-left border-collapse">
+                            <thead>
+                              <tr className="border-b border-[#E2E8F0] text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-[#F8FAFC]">
+                                <th className="py-2 px-3">Descripción</th>
+                                <th className="py-2 px-2">Cant.</th>
+                                <th className="py-2 px-2">Unitario</th>
+                                <th className="py-2 px-2">Subtotal</th>
+                                <th className="py-2 px-2">Estado</th>
+                                <th className="py-2 px-2 text-center">
+                                  Acción
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#E2E8F0] text-xs">
+                              {activeVehicle.parts.map((item) => {
+                                const rowTotal = item.quantity * item.unitPrice;
+                                const isInstalled = item.status === "Instalado";
+                                return (
+                                  <tr
+                                    key={item.id}
+                                    className="hover:bg-[#F8FAFC]"
+                                  >
+                                    <td className="py-2 px-3 font-bold text-[#0F172A]">
+                                      {item.description}
+                                    </td>
+                                    <td className="py-2 px-2 text-slate-600 font-medium">
+                                      {item.quantity} {item.unit}
+                                    </td>
+                                    <td className="py-2 px-2 text-slate-600 font-medium">
+                                      {formatARS(item.unitPrice)}
+                                    </td>
+                                    <td className="py-2 px-2 font-extrabold text-[#0F172A]">
+                                      {formatARS(rowTotal)}
+                                    </td>
+                                    <td className="py-2 px-2">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleTogglePartStatus(item.id)
+                                        }
+                                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold cursor-pointer ${
+                                          isInstalled
+                                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                                            : "bg-[#F8FAFC] text-[#3B82F6] border border-[#CBD5E1]"
+                                        }`}
+                                      >
+                                        <span
+                                          className={`w-1.5 h-1.5 rounded-full ${
+                                            isInstalled
+                                              ? "bg-[#1D4ED8]"
+                                              : "bg-[#60A5FA]"
+                                          }`}
+                                        />
+                                        {item.status}
+                                      </button>
+                                    </td>
+                                    <td className="py-2 px-2 text-center">
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          handleDeletePart(item.id)
+                                        }
+                                        className="p-1 text-slate-400 hover:text-[#1D4ED8] hover:bg-[#EFF6FF] rounded-lg cursor-pointer"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Accordion 3 Collapsed Bar */
+                    <button
+                      type="button"
+                      onClick={() => setOpenAccordion(3)}
+                      className="min-h-[3.25rem] py-2 shrink-0 w-full bg-white hover:bg-[#EFF6FF]/40 rounded-xl border border-[#E2E8F0] hover:border-blue-300 px-3.5 sm:px-4 flex flex-wrap items-center justify-between gap-2 text-left transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] text-xs font-extrabold flex items-center justify-center border border-blue-200 shrink-0">
+                          3
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                          Inventario y Repuestos Asignados
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-[11px] sm:text-xs font-bold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                          {activeVehicle.parts.length} ítems asignados ·{" "}
+                          {financialSummary.installedCount} Instalados,{" "}
+                          {financialSummary.inProgressCount} En progreso
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                      </div>
+                    </button>
+                  )}
+
+                  {/* ================= ACORDEÓN 4: BITÁCORA Y NOTAS DEL MECÁNICO ================= */}
+                  {openAccordion === 4 ? (
+                    <div className="flex-1 lg:min-h-0 flex flex-col bg-white rounded-2xl border-2 border-[#2563EB]/30 shadow-xs overflow-hidden">
+                      <div className="px-3.5 sm:px-4 py-2.5 bg-[#EFF6FF]/60 border-b border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-6 h-6 rounded-lg bg-[#2563EB] text-white text-xs font-extrabold flex items-center justify-center shrink-0">
+                            4
+                          </span>
+                          <h3 className="text-xs sm:text-sm font-extrabold text-[#0F172A]">
+                            Bitácora y Notas del Mecánico
+                          </h3>
+                        </div>
+                        <span className="text-[11px] sm:text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-[#2563EB] text-white">
+                          Últ. actualización: {latestEvent?.time} por{" "}
+                          {latestEvent?.actor}
+                        </span>
+                      </div>
+
+                      <div className="flex-1 lg:min-h-0 lg:overflow-y-auto p-3.5 flex flex-col justify-between gap-3">
+                        {/* Fast Note Input + Photo Evidence Button */}
+                        <form
+                          onSubmit={handleAddMechanicNote}
+                          className="flex flex-wrap items-center gap-2 shrink-0"
+                        >
+                          <input
+                            type="text"
+                            value={mechanicNoteInput}
+                            onChange={(e) =>
+                              setMechanicNoteInput(e.target.value)
+                            }
+                            placeholder="Escribir observación técnica para la bitácora o el cliente..."
+                            className="flex-1 min-w-[200px] px-3 py-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:bg-white focus:outline-none focus:border-[#2563EB]"
+                          />
+                          <button
+                            type="submit"
+                            className="px-3.5 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer shrink-0"
+                          >
+                            Registrar Nota
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              triggerToast(
+                                "Evidencia fotográfica actualizada",
+                                `Sincronizada en BoxBox QR para ${activeVehicle.ownerName}.`,
+                                "info"
+                              )
+                            }
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-[#1D4ED8] border border-blue-200 text-xs font-bold cursor-pointer shrink-0"
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>Subir Foto</span>
+                          </button>
+                        </form>
+
+                        {/* Compact Timeline List */}
+                        <div className="space-y-2 lg:overflow-y-auto pr-1">
+                          {activeVehicle.timeline.map((item) => (
+                            <div
+                              key={item.id}
+                              className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 text-xs"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="w-4 h-4 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </span>
+                                <span className="font-mono font-extrabold text-[#1D4ED8] shrink-0">
+                                  {item.time}
+                                </span>
+                                <span className="font-semibold text-[#0F172A] break-words">
+                                  {item.text}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-[#E2E8F0] shrink-0 ml-auto">
+                                {item.actor}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Accordion 4 Collapsed Bar */
+                    <button
+                      type="button"
+                      onClick={() => setOpenAccordion(4)}
+                      className="min-h-[3.25rem] py-2 shrink-0 w-full bg-white hover:bg-[#EFF6FF]/40 rounded-xl border border-[#E2E8F0] hover:border-blue-300 px-3.5 sm:px-4 flex flex-wrap items-center justify-between gap-2 text-left transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-6 h-6 rounded-lg bg-[#EFF6FF] text-[#1D4ED8] text-xs font-extrabold flex items-center justify-center border border-blue-200 shrink-0">
+                          4
+                        </span>
+                        <span className="text-xs sm:text-sm font-bold text-[#0F172A]">
+                          Bitácora y Notas del Mecánico
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-[#F8FAFC] text-slate-600 border border-[#E2E8F0]">
+                          Últ. actualización: {latestEvent?.time} por{" "}
+                          {latestEvent?.actor}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-slate-400 shrink-0" />
+                      </div>
+                    </button>
+                  )}
+                </section>
+              </>
+            )}
+
+            {/* =====================================================================
+                VISTA 2: DASHBOARD EJECUTIVO (RESPONSIVE)
+               ===================================================================== */}
+            {activeTab === "Dashboard" && (
+              <div className="flex-1 lg:min-h-0 flex flex-col gap-3.5 lg:overflow-y-auto">
+                {/* 4 KPIs Superiores (1 col en móvil, 2 en sm, 4 en lg) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
+                  {[
+                    {
+                      label: "Vehículos en Taller",
+                      value: "18",
+                      delta: "85% capacidad activa",
+                      icon: Car,
+                    },
+                    {
+                      label: "Listos para Entregar",
+                      value: "4",
+                      delta: "Notificados por QR",
+                      icon: CheckCircle2,
+                    },
+                    {
+                      label: "Ticket Promedio",
+                      value: "$245.000",
+                      delta: "+12.1% vs mes ant.",
+                      icon: FileText,
+                    },
+                    {
+                      label: "Facturación Mensual",
+                      value: "$4.2M",
+                      delta: "+18.4% crecimiento",
+                      icon: TrendingUp,
+                    },
+                  ].map((kpi) => {
+                    const Icon = kpi.icon;
+                    return (
+                      <div
+                        key={kpi.label}
+                        className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs p-4 flex items-start justify-between"
+                      >
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            {kpi.label}
+                          </p>
+                          <p className="text-2xl font-black text-[#0F172A] mt-1">
+                            {kpi.value}
+                          </p>
+                          <span className="text-[11px] font-semibold text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded mt-1 inline-block">
+                            {kpi.delta}
+                          </span>
+                        </div>
+                        <div className="w-9 h-9 rounded-xl bg-[#EFF6FF] border border-blue-200 flex items-center justify-center text-[#2563EB]">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Gráficos + Monitor */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 flex-1 lg:min-h-0">
+                  <div className="lg:col-span-6 bg-white rounded-2xl border border-[#E2E8F0] p-4 flex flex-col justify-between gap-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-extrabold text-[#0F172A]">
+                        Volumen de Órdenes por Estado
+                      </h3>
+                      <span className="text-[11px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-2.5 py-0.5 rounded-full">
+                        18 Activos
+                      </span>
+                    </div>
+                    <div className="space-y-3 my-auto">
+                      {[
+                        {
+                          stage: "En Espera",
+                          count: 2,
+                          pct: 11,
+                          barColor: "bg-[#93C5FD]",
+                        },
+                        {
+                          stage: "Diagnóstico",
+                          count: 4,
+                          pct: 22,
+                          barColor: "bg-[#60A5FA]",
+                        },
+                        {
+                          stage: "En Reparación",
+                          count: 6,
+                          pct: 34,
+                          barColor: "bg-[#2563EB]",
+                        },
+                        {
+                          stage: "Repuestos",
+                          count: 2,
+                          pct: 11,
+                          barColor: "bg-[#3B82F6]",
+                        },
+                        {
+                          stage: "Listo para Entrega",
+                          count: 4,
+                          pct: 22,
+                          barColor: "bg-[#1D4ED8]",
+                        },
+                      ].map((row) => (
+                        <div key={row.stage} className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="font-bold text-[#0F172A]">
+                              {row.stage}
+                            </span>
+                            <span className="font-extrabold text-[#1D4ED8]">
+                              {row.count} autos ({row.pct}%)
+                            </span>
+                          </div>
+                          <div className="w-full h-2 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full overflow-hidden">
+                            <div
+                              style={{ width: `${row.pct * 2.5}%` }}
+                              className={`h-full ${row.barColor} rounded-full`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
-                  {/* Botón Ver Presupuesto ($285.000) sincronizado */}
-                  <button
-                    type="button"
-                    onClick={() => setShowBudgetInPhone((prev) => !prev)}
-                    className="w-full py-2.5 px-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs shadow-sm transition-colors cursor-pointer"
-                  >
-                    {showBudgetInPhone
-                      ? `Ocultar Detalle (${formatARS(totalBudget)})`
-                      : `Ver Presupuesto (${formatARS(totalBudget)})`}
-                  </button>
-
-                  {/* Home indicator bar */}
-                  <div className="w-24 h-1 bg-slate-300 rounded-full mx-auto mt-2" />
+                  <div className="lg:col-span-6 bg-white rounded-2xl border border-[#E2E8F0] p-4 flex flex-col justify-between gap-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-extrabold text-[#0F172A]">
+                        Monitor de Bahías en Vivo
+                      </h3>
+                      <span className="text-[11px] text-slate-400 font-semibold">
+                        Acceso directo
+                      </span>
+                    </div>
+                    <div className="divide-y divide-[#E2E8F0] my-auto">
+                      {vehicles.map((v) => {
+                        const st = STAGES[v.stageIndex];
+                        return (
+                          <div
+                            key={v.id}
+                            className="py-2.5 flex flex-wrap items-center justify-between gap-2"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <MercosurPlateBadge plate={v.plate} size="sm" />
+                              <div className="min-w-0">
+                                <p className="text-xs font-extrabold text-[#0F172A] truncate">
+                                  {v.bayNumber} · {v.model}
+                                </p>
+                                <p className="text-[11px] text-slate-500 truncate">
+                                  {v.ownerName} · {st.label} ({st.percentage}%)
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedVehicleId(v.id);
+                                setActiveTab("Órdenes de Trabajo");
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shrink-0 cursor-pointer flex items-center gap-1 ml-auto"
+                            >
+                              <span>Abrir</span>
+                              <ArrowUpRight className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {/* Botón Simulado "Notificar avance por WhatsApp" en Azul Corporativo */}
-              <button
-                type="button"
-                onClick={handleWhatsAppNotify}
-                className="mt-2.5 w-full max-w-[292px] py-2.5 px-4 rounded-xl bg-[#1D4ED8] hover:bg-[#2563EB] text-white font-bold text-xs shadow-2xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            {/* =====================================================================
+                VISTA 3: INVENTARIO (PAÑOL DE REPUESTOS RESPONSIVE)
+               ===================================================================== */}
+            {activeTab === "Inventario" && (
+              <div className="flex-1 lg:min-h-0 bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs p-4 sm:p-5 flex flex-col gap-4 overflow-hidden">
+                <div className="flex flex-wrap items-center justify-between gap-2 shrink-0">
+                  <div>
+                    <h2 className="text-sm font-extrabold text-[#0F172A]">
+                      Stock del Pañol de Repuestos e Insumos
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      Asignación directa a la orden seleccionada:{" "}
+                      <strong className="text-[#1D4ED8]">
+                        {activeVehicle.model} ({activeVehicle.plate})
+                      </strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex-1 lg:min-h-0 overflow-x-auto lg:overflow-y-auto w-full">
+                  <table className="w-full min-w-[600px] text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] text-[10px] font-bold text-slate-500 uppercase tracking-wider bg-[#F8FAFC]">
+                        <th className="py-2.5 px-3">SKU</th>
+                        <th className="py-2.5 px-3">Repuesto</th>
+                        <th className="py-2.5 px-3">Categoría</th>
+                        <th className="py-2.5 px-3">Stock</th>
+                        <th className="py-2.5 px-3">Estado</th>
+                        <th className="py-2.5 px-3">Precio Unit.</th>
+                        <th className="py-2.5 px-3 text-right">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#E2E8F0] text-xs">
+                      {inventory.map((item) => {
+                        const isCritical = item.stock <= item.minStock;
+                        return (
+                          <tr key={item.id} className="hover:bg-[#F8FAFC]">
+                            <td className="py-3 px-3 font-mono font-bold text-[#1D4ED8]">
+                              {item.sku}
+                            </td>
+                            <td className="py-3 px-3 font-bold text-[#0F172A]">
+                              {item.name}
+                            </td>
+                            <td className="py-3 px-3 text-slate-600">
+                              {item.category}
+                            </td>
+                            <td className="py-3 px-3 font-extrabold text-[#0F172A]">
+                              {item.stock} {item.unit}
+                            </td>
+                            <td className="py-3 px-3">
+                              <span
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                                  isCritical
+                                    ? "bg-slate-100 text-[#0F172A] border border-[#CBD5E1]"
+                                    : "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                                }`}
+                              >
+                                {isCritical ? "Stock Crítico" : "Stock Óptimo"}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3 font-bold text-[#0F172A]">
+                              {formatARS(item.unitPrice)}
+                            </td>
+                            <td className="py-3 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleAssignFromInventory(item)}
+                                className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white border border-blue-200 text-xs font-bold cursor-pointer"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Asignar</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* =====================================================================
+                VISTA 4: CLIENTES (HISTORIAL CLÍNICO VEHICULAR RESPONSIVE)
+               ===================================================================== */}
+            {activeTab === "Clientes" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1 lg:min-h-0 lg:overflow-y-auto items-start">
+                {vehicles.map((v) => {
+                  const st = STAGES[v.stageIndex];
+                  const budget = v.parts.reduce(
+                    (sum, p) => sum + p.quantity * p.unitPrice,
+                    0
+                  );
+                  return (
+                    <div
+                      key={v.id}
+                      className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs p-5 flex flex-col justify-between gap-4"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="text-base font-extrabold text-[#0F172A]">
+                              {v.ownerName}
+                            </h3>
+                            <p className="text-xs text-slate-500">{v.email}</p>
+                          </div>
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                            {v.historicalServices} visitas
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-extrabold text-[#0F172A]">
+                              {v.model} ({v.year})
+                            </p>
+                            <p className="text-[11px] text-slate-500">
+                              {v.mileage} · {v.engineSpec}
+                            </p>
+                          </div>
+                          <MercosurPlateBadge plate={v.plate} size="sm" />
+                        </div>
+
+                        <div className="flex justify-between text-xs pt-1">
+                          <span className="text-slate-500">Orden activa:</span>
+                          <span className="font-extrabold text-[#1D4ED8]">
+                            {st.label} · {formatARS(budget)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedVehicleId(v.id);
+                          setActiveTab("Órdenes de Trabajo");
+                        }}
+                        className="w-full py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer"
+                      >
+                        Abrir Estación de Trabajo →
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+
+          {/* ================= 5. SIMULADOR MÓVIL DEL CLIENTE (DRAWER RESPONSIVO) ================= */}
+          {isClientDrawerOpen && (
+            <>
+              <div
+                onClick={() => setIsClientDrawerOpen(false)}
+                className={`fixed inset-0 bg-[#0F172A]/40 backdrop-blur-xs z-40 ${
+                  isDrawerPinned ? "lg:hidden" : ""
+                }`}
+              />
+
+              <aside
+                className={`${
+                  isDrawerPinned
+                    ? "fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] lg:static lg:w-[350px] lg:z-auto border-l border-[#E2E8F0] bg-white shrink-0 lg:h-full shadow-2xl lg:shadow-none"
+                    : "fixed inset-y-0 right-0 z-50 w-full sm:w-[400px] bg-white border-l border-[#E2E8F0] shadow-2xl"
+                } flex flex-col justify-between p-4 overflow-y-auto`}
               >
-                <MessageCircle className="w-4 h-4 fill-white/15" />
-                <span>Notificar avance por WhatsApp</span>
-              </button>
-            </div>
-          </section>
-        </main>
+                <div>
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#E2E8F0]">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-pulse" />
+                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#0F172A]">
+                        Vista del Cliente (En Vivo)
+                      </h3>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setIsDrawerPinned((prev) => !prev)}
+                        title="Fijar / Desacoplar panel en escritorio"
+                        className={`hidden lg:inline-flex p-1.5 rounded-lg border text-xs cursor-pointer ${
+                          isDrawerPinned
+                            ? "bg-[#EFF6FF] text-[#1D4ED8] border-blue-200"
+                            : "bg-[#F8FAFC] text-slate-500 border-[#E2E8F0]"
+                        }`}
+                      >
+                        <Pin className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsClientDrawerOpen(false)}
+                        className="p-2 rounded-xl bg-[#F8FAFC] hover:bg-slate-200/70 text-[#0F172A] border border-[#E2E8F0] cursor-pointer"
+                        aria-label="Cerrar Vista del Cliente"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Smartphone Mockup Scaled for Mobile & Desktop */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-full max-w-[285px] scale-95 sm:scale-100 origin-top bg-[#0F172A] rounded-[38px] p-2.5 shadow-xl border-4 border-slate-800 relative">
+                      <div className="w-24 h-4 bg-[#0F172A] rounded-b-xl mx-auto absolute top-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
+                        <div className="w-8 h-1 bg-slate-700 rounded-full" />
+                      </div>
+
+                      <div className="bg-white rounded-[28px] pt-6 pb-3.5 px-3.5 text-center flex flex-col justify-between min-h-[430px] relative overflow-hidden">
+                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 px-1 mb-1">
+                          <span>9:41</span>
+                          <span className="inline-flex items-center gap-1 text-[#2563EB] font-extrabold">
+                            <img
+                              src="/SVG_redondo.svg"
+                              alt="BoxBox QR"
+                              className="w-4 h-4 object-contain"
+                            />
+                            <span>BoxBox QR</span>
+                          </span>
+                          <span>5G</span>
+                        </div>
+
+                        <div className="space-y-1">
+                          <h4 className="text-base font-black text-[#0F172A]">
+                            ¡HOLA {activeVehicle.ownerFirstName}!
+                          </h4>
+                          <p className="text-xs font-bold text-slate-600">
+                            Tu {activeVehicle.model}
+                          </p>
+                          <div className="flex justify-center">
+                            <MercosurPlateBadge
+                              plate={activeVehicle.plate}
+                              size="sm"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="my-2 py-2 px-2.5 rounded-xl bg-[#EFF6FF] border border-blue-200">
+                          <p className="text-xs font-extrabold text-[#1D4ED8] uppercase">
+                            {currentStage.label} ({currentStage.percentage}%)
+                          </p>
+                          <p className="text-[10px] font-medium text-slate-600">
+                            ({activeVehicle.activeComponent})
+                          </p>
+                          <div className="w-full h-1.5 bg-blue-200/70 rounded-full overflow-hidden mt-1.5">
+                            <div
+                              style={{ width: `${currentStage.percentage}%` }}
+                              className="h-full bg-[#2563EB] transition-all duration-500 rounded-full"
+                            />
+                          </div>
+                        </div>
+
+                        {!showBudgetInPhone ? (
+                          <div className="relative rounded-xl overflow-hidden border border-[#E2E8F0] my-1">
+                            <img
+                              src={activeVehicle.photoUrl}
+                              alt={activeVehicle.photoCaption}
+                              className="w-full h-28 object-cover"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-transparent to-transparent flex items-end p-2">
+                              <p className="text-[10px] text-white font-medium line-clamp-1">
+                                {activeVehicle.photoCaption}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="my-1 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-2.5 text-left max-h-32 overflow-y-auto">
+                            <div className="flex items-center justify-between pb-1 mb-1 border-b border-[#E2E8F0]">
+                              <span className="text-[10px] font-extrabold uppercase text-[#0F172A]">
+                                Presupuesto
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowBudgetInPhone(false)}
+                                className="text-[10px] font-bold text-[#2563EB] flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <ArrowLeft className="w-2.5 h-2.5" /> Foto
+                              </button>
+                            </div>
+                            <div className="space-y-1">
+                              {activeVehicle.parts.map((p) => (
+                                <div
+                                  key={p.id}
+                                  className="flex justify-between text-[10px]"
+                                >
+                                  <span className="font-semibold text-[#0F172A] truncate pr-1">
+                                    {p.description} x{p.quantity}
+                                  </span>
+                                  <span className="font-bold text-[#1D4ED8] shrink-0">
+                                    {formatARS(p.quantity * p.unitPrice)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="my-1">
+                          <p className="text-[10px] text-slate-500">
+                            Entrega estimada:{" "}
+                            <strong className="text-[#0F172A]">
+                              {activeVehicle.estimatedDelivery}
+                            </strong>
+                          </p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowBudgetInPhone((prev) => !prev)}
+                          className="w-full py-2 px-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs cursor-pointer"
+                        >
+                          {showBudgetInPhone
+                            ? `Ocultar (${formatARS(totalBudget)})`
+                            : `Ver Presupuesto (${formatARS(totalBudget)})`}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleWhatsAppNotify}
+                      className="mt-2.5 w-full max-w-[285px] py-2 px-3 rounded-xl bg-[#1D4ED8] hover:bg-[#2563EB] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>Notificar avance por WhatsApp</span>
+                    </button>
+                  </div>
+                </div>
+              </aside>
+            </>
+          )}
+        </div>
       </div>
 
-      {/* ================= MODAL ETIQUETA QR PARA IMPRIMIR ================= */}
-      {showQrModal && (
+      {/* ================= MODAL IMPRESIÓN DE STICKER QR ================= */}
+      {showQrStickerModal && (
         <div className="fixed inset-0 bg-[#0F172A]/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-[#E2E8F0] text-center space-y-4">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <div className="flex items-center gap-2">
                 <QrCode className="w-5 h-5 text-[#2563EB]" />
                 <h3 className="font-bold text-[#0F172A] text-sm">
-                  Etiqueta BoxBox QR
+                  Impresión de Sticker Térmico BoxBox
                 </h3>
               </div>
               <button
-                onClick={() => setShowQrModal(false)}
+                onClick={() => setShowQrStickerModal(false)}
                 className="text-slate-400 hover:text-slate-600 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-4 border-2 border-dashed border-[#CBD5E1] rounded-xl bg-[#F8FAFC] flex flex-col items-center space-y-2.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1D4ED8]">
-                BOXBOX · TALLER CENTRAL
-              </span>
-              <RealisticQrCode
-                seed={activeVehicle.id + "-print-hq"}
-                sizeClass="w-28 h-28"
-              />
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-sm font-extrabold text-[#0F172A]">
-                  {activeVehicle.model}
+            <div className="p-5 border-2 border-dashed border-[#CBD5E1] rounded-2xl bg-[#F8FAFC] flex flex-col items-center space-y-3">
+              <div className="flex items-center gap-2">
+                <img
+                  src="/SVG_redondo.svg"
+                  alt="Logo BoxBox"
+                  className="w-6 h-6 object-contain shrink-0"
+                />
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1D4ED8]">
+                  BOXBOX · TALLER MECÁNICA CENTRAL
                 </span>
-                <LicensePlateBadge plate={activeVehicle.plate} />
               </div>
-              <p className="text-xs text-slate-500">
-                Orden {activeVehicle.orderNumber} · Cliente:{" "}
-                {activeVehicle.ownerName}
-              </p>
+              <div className="relative">
+                <RealisticQrCode
+                  seed={activeVehicle.id + "-sticker-print"}
+                  sizeClass="w-32 h-32"
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-white p-0.5 rounded-md shadow-2xs border border-[#E2E8F0]">
+                    <img
+                      src="/SVG_redondo.svg"
+                      alt="Insignia QR BoxBox"
+                      className="w-7 h-7 object-contain"
+                    />
+                  </div>
+                </div>
+              </div>
+              <MercosurPlateBadge plate={activeVehicle.plate} />
+              <div>
+                <p className="text-sm font-extrabold text-[#0F172A]">
+                  {activeVehicle.model} ({activeVehicle.year})
+                </p>
+                <p className="text-xs text-slate-500">
+                  {activeVehicle.orderNumber} · {activeVehicle.traceId}
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-2">
               <button
                 onClick={() => {
-                  setShowQrModal(false);
+                  setShowQrStickerModal(false);
                   triggerToast(
-                    "Etiqueta BoxBox enviada a impresora térmica",
-                    `Vehículo: ${activeVehicle.model} (${activeVehicle.plate})`,
+                    "Sticker QR enviado a impresora térmica",
+                    `${activeVehicle.model} (${activeVehicle.plate}) · ${activeVehicle.traceId}`,
                     "success"
                   );
                 }}
@@ -1815,7 +2780,7 @@ export default function MecaniQDashboard() {
                 <span>Imprimir Ahora</span>
               </button>
               <button
-                onClick={() => setShowQrModal(false)}
+                onClick={() => setShowQrStickerModal(false)}
                 className="py-2.5 px-4 bg-[#F8FAFC] hover:bg-slate-200/70 text-[#0F172A] border border-[#E2E8F0] text-xs font-semibold rounded-xl cursor-pointer"
               >
                 Cerrar
@@ -1825,84 +2790,15 @@ export default function MecaniQDashboard() {
         </div>
       )}
 
-      {/* ================= MODAL DE ÓRDENES DE TRABAJO ACTIVAS ================= */}
-      {showOrdersDrawer && (
-        <div className="fixed inset-0 bg-[#0F172A]/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-[#E2E8F0] space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
-              <div>
-                <h3 className="font-bold text-[#0F172A] text-base">
-                  Órdenes de Trabajo — BoxBox
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Selecciona un vehículo para abrir su trazabilidad QR en vivo
-                </p>
-              </div>
-              <button
-                onClick={() => setShowOrdersDrawer(false)}
-                className="text-slate-400 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2.5">
-              {vehicles.map((v) => {
-                const st = STAGES[v.stageIndex];
-                const isSelected = v.id === activeVehicle.id;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => {
-                      setSelectedVehicleId(v.id);
-                      setShowOrdersDrawer(false);
-                    }}
-                    className={`w-full p-3.5 rounded-xl border text-left flex items-center justify-between transition-colors cursor-pointer ${
-                      isSelected
-                        ? "bg-[#EFF6FF] border-[#2563EB] ring-1 ring-[#2563EB]/20"
-                        : "bg-white hover:bg-[#F8FAFC] border-[#E2E8F0]"
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <span className="font-bold text-sm text-[#0F172A]">
-                          {v.model}
-                        </span>
-                        <LicensePlateBadge plate={v.plate} />
-                        <span className="text-[11px] font-semibold text-slate-400">
-                          {v.orderNumber}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-600 mt-1">
-                        Cliente:{" "}
-                        <span className="font-semibold text-[#0F172A]">
-                          {v.ownerName}
-                        </span>{" "}
-                        · Tarea: {v.activeComponent}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="inline-block text-xs font-bold px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200/70">
-                        {st.label} ({st.percentage}%)
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= MODAL DE AYUDA / DEMO INTERACTIVA ================= */}
+      {/* ================= MODAL DE AYUDA ZERO-SCROLL & RESPONSIVE ================= */}
       {showHelpModal && (
         <div className="fixed inset-0 bg-[#0F172A]/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl border border-[#E2E8F0] space-y-3">
-            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2.5">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-[#E2E8F0] space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#2563EB]" />
                 <h3 className="font-bold text-[#0F172A] text-sm">
-                  Guía Interactiva — BoxBox MVP
+                  BoxBox PRO — Responsive &amp; Zero-Scroll
                 </h3>
               </div>
               <button
@@ -1912,31 +2808,26 @@ export default function MecaniQDashboard() {
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <ul className="text-xs text-slate-600 space-y-2 leading-relaxed">
+            <ul className="text-xs text-slate-600 space-y-2.5 leading-relaxed">
               <li>
-                • <strong>Selector de Vehículos:</strong> Alterna entre Ford
-                Focus, VW Gol Trend y Toyota Hilux en la columna izquierda.
+                • <strong>Mobile-First + Desktop Zero-Scroll:</strong> En
+                móviles y tablets permite navegación táctil con menú hamburguesa
+                y scroll natural; en monitores grandes encaja en 100vh.
               </li>
               <li>
-                • <strong>Stepper de 6 Etapas en Vivo:</strong> Haz clic en
-                cualquier etapa (<em>Recepción</em> a <em>Listo</em>) para
-                actualizar el % de avance, sumar un registro al historial y
-                sincronizar el teléfono del cliente.
+                • <strong>Tree-View de Bahías en Sidebar:</strong> Conmuta entre
+                las 3 bahías activas directamente debajo de{" "}
+                <em>Órdenes de Trabajo</em>.
               </li>
               <li>
-                • <strong>Tabla de Repuestos Reactiva:</strong> Agrega nuevos
-                ítems, alterna su estado o elimínalos; el total se recalcula
-                automáticamente en toda la interfaz.
-              </li>
-              <li>
-                • <strong>Simulador BoxBox QR:</strong> Haz clic en{" "}
-                <em>Ver Presupuesto</em> dentro del smartphone o envía el avance
-                por WhatsApp.
+                • <strong>4 Acordeones Exclusivos:</strong> Alterna entre{" "}
+                <em>Telemetría</em>, <em>Presupuesto</em>, <em>Repuestos</em> y{" "}
+                <em>Bitácora</em> con resúmenes en vivo.
               </li>
             </ul>
             <button
               onClick={() => setShowHelpModal(false)}
-              className="w-full py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl cursor-pointer"
+              className="w-full py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl cursor-pointer"
             >
               Entendido
             </button>
@@ -1944,14 +2835,14 @@ export default function MecaniQDashboard() {
         </div>
       )}
 
-      {/* ================= TOAST DE CONFIRMACIÓN FLOTANTE ================= */}
+      {/* ================= TOAST DE CONFIRMACIÓN ================= */}
       {toast && (
-        <div className="fixed bottom-5 right-5 z-50 max-w-md bg-[#0F172A] text-white px-4 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-start gap-3">
+        <div className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 max-w-md bg-[#0F172A] text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-start gap-3">
           <div className="p-2 rounded-xl shrink-0 bg-[#2563EB]/25 text-[#60A5FA]">
             {toast.type === "whatsapp" ? (
-              <MessageCircle className="w-5 h-5" />
+              <MessageCircle className="w-4 h-4" />
             ) : (
-              <CheckCircle2 className="w-5 h-5" />
+              <CheckCircle2 className="w-4 h-4" />
             )}
           </div>
           <div className="text-xs leading-relaxed pr-2">
