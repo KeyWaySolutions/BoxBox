@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import {
   Car,
   LayoutDashboard,
@@ -39,6 +40,7 @@ import {
   Send,
   ShieldCheck,
   Menu,
+  ExternalLink,
 } from "lucide-react";
 
 // Types
@@ -153,7 +155,9 @@ export const STAGES: StageInfo[] = [
   },
 ];
 
-const INITIAL_VEHICLES: VehicleOrder[] = [
+export const STORAGE_KEY_VEHICLES = "boxbox_vehicles_v1";
+
+export const INITIAL_VEHICLES: VehicleOrder[] = [
   {
     id: "focus-ae123cd",
     bayNumber: "Bahía 01",
@@ -454,19 +458,69 @@ const INITIAL_INVENTORY: InventoryStockItem[] = [
 ];
 
 // Format currency in Argentine Peso format ($180.000)
-function formatARS(amount: number): string {
+export function formatARS(amount: number): string {
   return "$" + Math.round(amount).toLocaleString("es-AR");
 }
 
-// Realistic 25x25 Version-2 QR Code SVG component with 3 standard 7x7 finder patterns + alignment square in #0F172A
-function RealisticQrCode({
+// Convert license plate "AE 123 CD" -> "AE-123-CD"
+export function plateToSlug(plate: string): string {
+  return plate.trim().replace(/\s+/g, "-");
+}
+
+// Normalize any URL param ("AE-123-CD", "ae%20123%20cd", "ae123cd") and find matching vehicle
+export function findVehicleByPlateParam(
+  rawParam: string,
+  list: VehicleOrder[] = INITIAL_VEHICLES
+): VehicleOrder {
+  const decoded = decodeURIComponent(rawParam || "").trim();
+  const normalizedTarget = decoded.replace(/[-_\s]+/g, "").toUpperCase();
+
+  const found = list.find(
+    (v) =>
+      v.plate.replace(/[-_\s]+/g, "").toUpperCase() === normalizedTarget ||
+      v.id.toUpperCase() === decoded.toUpperCase()
+  );
+
+  if (found) return found;
+
+  // Fallback dynamic vehicle if user navigates to any custom license plate URL
+  const formattedPlate = decoded.replace(/[-_]+/g, " ").toUpperCase() || "AE 123 CD";
+  return {
+    ...list[0],
+    id: `custom-${normalizedTarget.toLowerCase()}`,
+    plate: formattedPlate,
+    name: `${list[0].model} (${formattedPlate})`,
+  };
+}
+
+export interface QrImageSettings {
+  src: string;
+  width: number;
+  height: number;
+  excavate?: boolean;
+}
+
+// Dynamic QR Code SVG component encoding URL value with center logo excavation (imageSettings)
+export function RealisticQrCode({
+  value,
   seed,
+  size = 96,
   sizeClass = "w-20 h-20",
+  imageSettings = {
+    src: "/SVG_redondo.svg",
+    width: 28,
+    height: 28,
+    excavate: true,
+  },
 }: {
-  seed: string;
+  value?: string;
+  seed?: string;
+  size?: number;
   sizeClass?: string;
+  imageSettings?: QrImageSettings;
 }) {
-  const gridSize = 25;
+  const encodedValue = value || seed || "https://boxbox.app";
+  const gridSize = 29;
   const matrix: boolean[][] = Array.from({ length: gridSize }, () =>
     Array(gridSize).fill(false)
   );
@@ -497,15 +551,17 @@ function RealisticQrCode({
   placeFinderPattern(0, gridSize - 7);
   placeFinderPattern(gridSize - 7, 0);
 
-  for (let r = 16; r <= 20; r++) {
-    for (let c = 16; c <= 20; c++) {
+  // Version 3 alignment pattern at (20, 20)
+  for (let r = 18; r <= 22; r++) {
+    for (let c = 18; c <= 22; c++) {
       reserved[r][c] = true;
-      const isBorder = r === 16 || r === 20 || c === 16 || c === 20;
-      const isCenter = r === 18 && c === 18;
+      const isBorder = r === 18 || r === 22 || c === 18 || c === 22;
+      const isCenter = r === 20 && c === 20;
       matrix[r][c] = isBorder || isCenter;
     }
   }
 
+  // Timing patterns
   for (let i = 8; i < gridSize - 8; i++) {
     reserved[6][i] = true;
     reserved[i][6] = true;
@@ -513,18 +569,22 @@ function RealisticQrCode({
     matrix[i][6] = i % 2 === 0;
   }
 
+  // Deterministic URL encoding into QR modules
   let hash = 2166136261;
-  for (let i = 0; i < seed.length; i++) {
-    hash ^= seed.charCodeAt(i);
+  for (let i = 0; i < encodedValue.length; i++) {
+    hash ^= encodedValue.charCodeAt(i);
     hash = Math.imul(hash, 16777619);
   }
 
   for (let r = 0; r < gridSize; r++) {
     for (let c = 0; c < gridSize; c++) {
       if (!reserved[r][c]) {
+        const charCode =
+          encodedValue.charCodeAt((r * gridSize + c) % encodedValue.length) || 65;
         const mix = Math.abs(
           Math.imul(r + 11, 374761393) ^
             Math.imul(c + 23, 668265263) ^
+            Math.imul(charCode, 2654435761) ^
             hash
         );
         matrix[r][c] = mix % 11 < 5;
@@ -532,13 +592,43 @@ function RealisticQrCode({
     }
   }
 
+  // Excavate center modules when imageSettings.excavate is enabled
+  const logoRatioW = imageSettings
+    ? Math.min(0.36, Math.max(0.22, imageSettings.width / size))
+    : 0;
+  const logoRatioH = imageSettings
+    ? Math.min(0.36, Math.max(0.22, imageSettings.height / size))
+    : 0;
+  const logoGridW = Math.ceil(gridSize * logoRatioW);
+  const logoGridH = Math.ceil(gridSize * logoRatioH);
+  const logoStartX = (gridSize - logoGridW) / 2;
+  const logoStartY = (gridSize - logoGridH) / 2;
+
+  if (imageSettings?.excavate) {
+    const startR = Math.floor(logoStartY);
+    const endR = Math.ceil(logoStartY + logoGridH) - 1;
+    const startC = Math.floor(logoStartX);
+    const endC = Math.ceil(logoStartX + logoGridW) - 1;
+    for (let r = startR; r <= endR; r++) {
+      for (let c = startC; c <= endC; c++) {
+        if (r >= 0 && r < gridSize && c >= 0 && c < gridSize) {
+          matrix[r][c] = false;
+        }
+      }
+    }
+  }
+
   return (
     <svg
       viewBox={`0 0 ${gridSize} ${gridSize}`}
+      width={size}
+      height={size}
       shapeRendering="crispEdges"
       className={`${sizeClass} bg-white p-1.5 rounded-xl border border-[#E2E8F0] shadow-2xs shrink-0`}
-      aria-label="Código QR de trazabilidad BoxBox"
+      aria-label={`Código QR dinámico: ${encodedValue}`}
+      role="img"
     >
+      <title>{encodedValue}</title>
       {matrix.map((row, rIdx) =>
         row.map((filled, cIdx) =>
           filled ? (
@@ -553,12 +643,32 @@ function RealisticQrCode({
           ) : null
         )
       )}
+      {imageSettings && (
+        <g>
+          <rect
+            x={logoStartX - 0.35}
+            y={logoStartY - 0.35}
+            width={logoGridW + 0.7}
+            height={logoGridH + 0.7}
+            rx={1.2}
+            fill="#FFFFFF"
+          />
+          <image
+            href={imageSettings.src}
+            x={logoStartX}
+            y={logoStartY}
+            width={logoGridW}
+            height={logoGridH}
+            preserveAspectRatio="xMidYMid meet"
+          />
+        </g>
+      )}
     </svg>
   );
 }
 
 // Chapa Patente Estilo Mercosur Argentino
-function MercosurPlateBadge({
+export function MercosurPlateBadge({
   plate,
   size = "md",
 }: {
@@ -653,6 +763,49 @@ export default function MecaniQDashboard() {
   );
 
   const currentStage = STAGES[activeVehicle.stageIndex];
+
+  // Dynamic origin for QR URL generation
+  const [origin, setOrigin] = useState<string>("https://boxbox.app");
+  const [hasLoadedStorage, setHasLoadedStorage] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.location?.origin) {
+        setOrigin(window.location.origin);
+      }
+      try {
+        const saved = window.localStorage.getItem(STORAGE_KEY_VEHICLES);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setVehicles(parsed);
+          }
+        }
+      } catch {
+        // Ignore storage read errors
+      }
+      setHasLoadedStorage(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasLoadedStorage) return;
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEY_VEHICLES,
+        JSON.stringify(vehicles)
+      );
+    } catch {
+      // Ignore storage write errors
+    }
+  }, [vehicles, hasLoadedStorage]);
+
+  const activePlateSlug = useMemo(
+    () => plateToSlug(activeVehicle.plate),
+    [activeVehicle.plate]
+  );
+  const activeClientPath = `/client/${activePlateSlug}`;
+  const dynamicClientUrl = `${origin}${activeClientPath}`;
 
   // Financial breakdown calculations
   const financialSummary = useMemo(() => {
@@ -925,7 +1078,7 @@ export default function MecaniQDashboard() {
 
   // Handler: Copy tracking link
   const handleCopyLink = () => {
-    const url = `https://boxbox.app/qr/${activeVehicle.traceId}`;
+    const url = dynamicClientUrl;
     if (typeof navigator !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(url).catch(() => {});
     }
@@ -940,9 +1093,7 @@ export default function MecaniQDashboard() {
         activeVehicle.ownerName.split(" ")[0]
       }! Tu ${activeVehicle.model} (${activeVehicle.plate}) está en etapa: ${
         currentStage.label
-      } (${currentStage.percentage}%). Seguimiento QR: boxbox.app/qr/${
-        activeVehicle.traceId
-      }"`,
+      } (${currentStage.percentage}%). Seguimiento en vivo: ${dynamicClientUrl}"`,
       "whatsapp"
     );
   };
@@ -1508,61 +1659,68 @@ export default function MecaniQDashboard() {
                     <div
                       onClick={() => setIsClientDrawerOpen(true)}
                       className="relative cursor-pointer shrink-0 group"
-                      title="Abrir Vista del Cliente"
+                      title={`Abrir Vista del Cliente: ${dynamicClientUrl}`}
                     >
                       <RealisticQrCode
-                        seed={
-                          activeVehicle.id +
-                          "-" +
-                          activeVehicle.traceId +
-                          "-" +
-                          activeVehicle.stageIndex
-                        }
+                        value={`${origin}/client/${activeVehicle.plate.replace(/\s+/g, "-")}`}
+                        size={84}
                         sizeClass="w-20 h-20"
+                        imageSettings={{
+                          src: "/SVG_redondo.svg",
+                          width: 28,
+                          height: 28,
+                          excavate: true,
+                        }}
                       />
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="bg-white p-0.5 rounded-md shadow-2xs border border-[#E2E8F0]">
-                          <img
-                            src="/SVG_redondo.svg"
-                            alt="BoxBox QR"
-                            className="w-5 h-5 object-contain"
-                          />
-                        </div>
-                      </div>
                     </div>
 
-                    <div className="w-full flex-1 min-w-0 flex flex-col justify-between gap-2">
+                    <div className="w-full flex-1 min-w-0 flex flex-col justify-between gap-1.5">
                       <div className="flex items-center justify-between gap-1">
                         <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1D4ED8]">
                           Trazabilidad QR
                         </span>
-                        <span className="font-mono text-[10px] font-bold bg-white text-[#0F172A] px-1.5 py-0.5 rounded border border-blue-200">
-                          {activeVehicle.traceId}
+                        <span className="font-mono text-[10px] font-bold bg-white text-[#0F172A] px-1.5 py-0.5 rounded border border-blue-200 truncate">
+                          /client/{activePlateSlug}
                         </span>
                       </div>
 
                       <button
                         type="button"
-                        onClick={() => setIsClientDrawerOpen((prev) => !prev)}
+                        onClick={() => setIsClientDrawerOpen(true)}
                         className="w-full py-2 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-2xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">Ver Vista del Cliente</span>
+                        <span className="truncate">📱 Ver Vista del Cliente</span>
                       </button>
 
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => setShowQrStickerModal(true)}
+                          onClick={() => {
+                            setShowQrStickerModal(true);
+                            triggerToast(
+                              `Etiqueta térmica QR generada para ${activeVehicle.plate}`,
+                              `Lista para imprimir y adherir al parabrisas (${dynamicClientUrl})`,
+                              "info"
+                            );
+                          }}
                           className="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
                         >
                           <Printer className="w-3 h-3 text-[#2563EB]" />
                           <span>Imprimir QR</span>
                         </button>
+                        <Link
+                          href={activeClientPath}
+                          target="_blank"
+                          title={`Abrir página pública ${dynamicClientUrl}`}
+                          className="py-1.5 px-2.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold transition-colors inline-flex items-center justify-center"
+                        >
+                          <ExternalLink className="w-3 h-3 text-[#2563EB]" />
+                        </Link>
                         <button
                           type="button"
                           onClick={handleCopyLink}
-                          title="Copiar link de seguimiento"
+                          title="Copiar link dinámico de seguimiento"
                           className="py-1.5 px-2.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold transition-colors cursor-pointer"
                         >
                           <Copy className="w-3 h-3 text-[#2563EB]" />
@@ -2692,14 +2850,24 @@ export default function MecaniQDashboard() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleWhatsAppNotify}
-                      className="mt-2.5 w-full max-w-[285px] py-2 px-3 rounded-xl bg-[#1D4ED8] hover:bg-[#2563EB] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" />
-                      <span>Notificar avance por WhatsApp</span>
-                    </button>
+                    <div className="mt-2.5 w-full max-w-[285px] space-y-2">
+                      <Link
+                        href={activeClientPath}
+                        target="_blank"
+                        className="w-full py-2 px-3 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-[#1D4ED8] border border-blue-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Abrir /client/{activePlateSlug} en Vivo</span>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={handleWhatsAppNotify}
+                        className="w-full py-2 px-3 rounded-xl bg-[#1D4ED8] hover:bg-[#2563EB] text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>Notificar avance por WhatsApp</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </aside>
@@ -2716,7 +2884,7 @@ export default function MecaniQDashboard() {
               <div className="flex items-center gap-2">
                 <QrCode className="w-5 h-5 text-[#2563EB]" />
                 <h3 className="font-bold text-[#0F172A] text-sm">
-                  Impresión de Sticker Térmico BoxBox
+                  Etiqueta Térmica QR para Parabrisas
                 </h3>
               </div>
               <button
@@ -2735,23 +2903,21 @@ export default function MecaniQDashboard() {
                   className="w-6 h-6 object-contain shrink-0"
                 />
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#1D4ED8]">
-                  BOXBOX · TALLER MECÁNICA CENTRAL
+                  BOXBOX PRO · ETIQUETA PARABRISAS
                 </span>
               </div>
               <div className="relative">
                 <RealisticQrCode
-                  seed={activeVehicle.id + "-sticker-print"}
+                  value={`${origin}/client/${activeVehicle.plate.replace(/\s+/g, "-")}`}
+                  size={128}
                   sizeClass="w-32 h-32"
+                  imageSettings={{
+                    src: "/SVG_redondo.svg",
+                    width: 28,
+                    height: 28,
+                    excavate: true,
+                  }}
                 />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-white p-0.5 rounded-md shadow-2xs border border-[#E2E8F0]">
-                    <img
-                      src="/SVG_redondo.svg"
-                      alt="Insignia QR BoxBox"
-                      className="w-7 h-7 object-contain"
-                    />
-                  </div>
-                </div>
               </div>
               <MercosurPlateBadge plate={activeVehicle.plate} />
               <div>
@@ -2759,7 +2925,10 @@ export default function MecaniQDashboard() {
                   {activeVehicle.model} ({activeVehicle.year})
                 </p>
                 <p className="text-xs text-slate-500">
-                  {activeVehicle.orderNumber} · {activeVehicle.traceId}
+                  {activeVehicle.orderNumber} · {activeVehicle.bayNumber}
+                </p>
+                <p className="font-mono text-[10px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded border border-blue-200 mt-1 break-all">
+                  {dynamicClientUrl}
                 </p>
               </div>
             </div>
@@ -2769,15 +2938,15 @@ export default function MecaniQDashboard() {
                 onClick={() => {
                   setShowQrStickerModal(false);
                   triggerToast(
-                    "Sticker QR enviado a impresora térmica",
-                    `${activeVehicle.model} (${activeVehicle.plate}) · ${activeVehicle.traceId}`,
+                    "Sticker térmico enviado a impresora Zebra / Brother",
+                    `Etiqueta QR lista para el parabrisas de ${activeVehicle.model} (${activeVehicle.plate})`,
                     "success"
                   );
                 }}
                 className="flex-1 py-2.5 bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Printer className="w-4 h-4" />
-                <span>Imprimir Ahora</span>
+                <span>Imprimir Etiqueta Parabrisas</span>
               </button>
               <button
                 onClick={() => setShowQrStickerModal(false)}
