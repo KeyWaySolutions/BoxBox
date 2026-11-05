@@ -1,16 +1,13 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-});
-
 export const metadata: Metadata = {
-  title: "BoxBox - Gestión de Reparaciones | Taller Mecánica Central",
+  title: "BoxBox PRO | Gestión de Talleres & Trazabilidad QR",
   description:
-    "BoxBox: Plataforma web SaaS de gestión de órdenes de trabajo para talleres mecánicos con trazabilidad en tiempo real mediante código QR.",
+    "BoxBox PRO: Plataforma web SaaS de gestión de órdenes de trabajo para talleres mecánicos con trazabilidad en tiempo real mediante código QR.",
+  icons: {
+    icon: "/SVG_redondo.svg",
+  },
 };
 
 export default function RootLayout({
@@ -20,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
