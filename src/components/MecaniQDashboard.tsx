@@ -52,7 +52,7 @@ export type NavigationTab =
   | "Dashboard"
   | "Inventario"
   | "Clientes";
-export type AccordionId = 1 | 2 | 3 | 4;
+export type AccordionId = 1 | 2 | 3 | 4 | 5;
 
 export interface StageInfo {
   id: StageIndex;
@@ -1421,25 +1421,41 @@ export default function MecaniQDashboard() {
 
       {/* ================= 3. ÁREA PRINCIPAL (RESPONSIVE SCROLL EN MÓVIL / ZERO-SCROLL EN DESKTOP) ================= */}
       <div className="flex-1 flex flex-col lg:h-full min-w-0 lg:overflow-hidden">
-        {/* HEADER SUPERIOR COMPACTO Y RESPONSIVO */}
-        <header className="bg-white px-4 lg:px-5 py-3 lg:py-2.5 flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] shrink-0 z-20">
+        {/* 1. HEADER SUPERIOR COMPACTO EN UNA SOLA FILA HORIZONTAL */}
+        <header className="bg-white px-4 lg:px-5 py-2 flex items-center justify-between gap-4 border-b border-[#E2E8F0] shrink-0 z-20">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-xs font-extrabold text-[#1D4ED8] bg-[#EFF6FF] px-2.5 py-1 rounded-lg border border-blue-200/80 shrink-0">
               {activeTab}
             </span>
-            <span className="text-slate-300 hidden sm:inline">/</span>
-            <h1 className="text-sm sm:text-base font-extrabold text-[#0F172A] tracking-tight truncate hidden sm:block">
-              Gestión de Reparaciones — Taller Mecánica Central
+            <span className="text-slate-300 hidden md:inline">/</span>
+            <h1 className="text-xs sm:text-sm font-extrabold text-[#0F172A] tracking-tight truncate hidden md:block">
+              Gestión de Reparaciones
             </h1>
-            <span className="hidden xl:inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 ml-2">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("Órdenes de Trabajo");
+                setOpenAccordion(1);
+              }}
+              title="Ver Ficha Técnica y QR del vehículo activo"
+              className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0F172A] bg-[#F8FAFC] hover:bg-[#EFF6FF] px-2.5 py-1 rounded-lg border border-[#E2E8F0] hover:border-blue-200 transition-colors cursor-pointer shrink-0"
+            >
               <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-              18 Vehículos en Taller
-            </span>
+              <span>{activeVehicle.bayNumber}</span>
+              <span className="text-slate-300">·</span>
+              <span className="font-mono font-extrabold text-[#1D4ED8]">
+                {activeVehicle.plate}
+              </span>
+              <span className="text-slate-300 hidden lg:inline">·</span>
+              <span className="text-slate-600 hidden lg:inline">
+                {activeVehicle.model}
+              </span>
+            </button>
           </div>
 
-          {/* Search & Quick Header Icons */}
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-            <div className="relative flex-1 sm:flex-initial w-full sm:w-64 lg:w-80">
+          {/* Search & Quick Header Icons in the Same Single Row */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="relative w-44 sm:w-60 lg:w-72">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
@@ -1488,7 +1504,7 @@ export default function MecaniQDashboard() {
 
             <button
               onClick={() => setShowHelpModal(true)}
-              className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] transition-colors cursor-pointer shrink-0"
+              className="p-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] transition-colors cursor-pointer shrink-0"
               title="Guía de estación BoxBox PRO"
             >
               <HelpCircle className="w-4 h-4" />
@@ -1497,11 +1513,11 @@ export default function MecaniQDashboard() {
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowNotifications((prev) => !prev)}
-                className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] transition-colors relative cursor-pointer"
+                className="p-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-slate-600 hover:text-[#2563EB] hover:bg-[#EFF6FF] transition-colors relative cursor-pointer"
                 title="Notificaciones"
               >
                 <Bell className="w-4 h-4" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#2563EB] ring-2 ring-white" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#2563EB] ring-2 ring-white" />
               </button>
 
               {showNotifications && (
@@ -1536,1018 +1552,1136 @@ export default function MecaniQDashboard() {
         {/* WORKSPACE AREA + OPTIONAL DOCKED CLIENT SIMULATOR */}
         <div className="flex-1 flex flex-col lg:flex-row lg:min-h-0 min-w-0 lg:overflow-hidden relative">
           {/* MAIN VIEWPORT */}
-          <main className="flex-1 flex flex-col lg:h-full lg:min-h-0 min-w-0 p-3.5 sm:p-4 gap-3 lg:overflow-hidden">
+          <main className="flex-1 flex flex-col lg:h-full lg:min-h-0 min-w-0 p-3 sm:p-4 gap-2.5 lg:overflow-hidden">
             {/* =====================================================================
-                VISTA 1: ÓRDENES DE TRABAJO (ENCABEZADO COMPACTO + 4 ACORDEONES EXCLUSIVOS)
+                VISTA 1: ÓRDENES DE TRABAJO (5 PESTAÑAS ESTILO NAVEGADOR ZERO-SCROLL)
                ===================================================================== */}
             {activeTab === "Órdenes de Trabajo" && (
-              <>
-                {/* 3. TARJETA DE ENCABEZADO UNIFICADA (FICHA TÉCNICA + QR ADAPTABLES) */}
-                <section className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center bg-white p-3.5 sm:p-4 rounded-2xl border border-[#E2E8F0] shadow-xs shrink-0">
-                  {/* Bloque Izquierdo y Central (8 columnas en lg - Ficha Técnica) */}
-                  <div className="col-span-1 lg:col-span-8 flex flex-col gap-3 min-w-0">
-                    <div className="flex flex-wrap items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <MercosurPlateBadge plate={activeVehicle.plate} />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
-                              {activeVehicle.bayNumber}
-                            </span>
-                            <span className="font-mono text-xs font-bold text-slate-500">
-                              {activeVehicle.orderNumber}
+              <section className="flex-1 min-h-0 flex flex-col gap-2.5 lg:overflow-hidden">
+                {/* BARRA DE 5 PESTAÑAS ESTILO NAVEGADOR CON REBORDE SUPERIOR AZUL/CELESTE */}
+                <div
+                  role="tablist"
+                  aria-label="Secciones de la Orden de Trabajo"
+                  className="bg-slate-200/60 p-1.5 rounded-2xl border border-slate-200/90 flex items-stretch gap-1.5 overflow-x-auto flex-nowrap shrink-0"
+                >
+                  {/* Tab 1: 1. Ficha Técnica & QR */}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={openAccordion === 1}
+                    onClick={() => setOpenAccordion(1)}
+                    className={`flex-1 min-w-max px-3.5 py-2 rounded-t-xl rounded-b-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                      openAccordion === 1
+                        ? "bg-white text-blue-700 font-bold shadow-sm border-x border-b border-slate-200/90 border-t-4 border-t-blue-600"
+                        : "bg-slate-100/80 hover:bg-slate-200/70 text-slate-600 font-semibold hover:text-[#0F172A] border-x border-b border-slate-200/60 border-t-2 border-t-sky-300/60 hover:border-t-sky-400"
+                    }`}
+                  >
+                    <QrCode
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        openAccordion === 1
+                          ? "text-blue-600"
+                          : "text-slate-400"
+                      }`}
+                    />
+                    <span>1. Ficha Técnica &amp; QR</span>
+                    <span
+                      className={`font-mono text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                        openAccordion === 1
+                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                          : "bg-white/80 text-slate-600 border border-slate-200"
+                      }`}
+                    >
+                      {activeVehicle.plate}
+                    </span>
+                  </button>
+
+                  {/* Tab 2: 2. Estado & Telemetría */}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={openAccordion === 2}
+                    onClick={() => setOpenAccordion(2)}
+                    className={`flex-1 min-w-max px-3.5 py-2 rounded-t-xl rounded-b-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                      openAccordion === 2
+                        ? "bg-white text-blue-700 font-bold shadow-sm border-x border-b border-slate-200/90 border-t-4 border-t-blue-600"
+                        : "bg-slate-100/80 hover:bg-slate-200/70 text-slate-600 font-semibold hover:text-[#0F172A] border-x border-b border-slate-200/60 border-t-2 border-t-sky-300/60 hover:border-t-sky-400"
+                    }`}
+                  >
+                    <Activity
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        openAccordion === 2
+                          ? "text-blue-600"
+                          : "text-slate-400"
+                      }`}
+                    />
+                    <span>2. Estado &amp; Telemetría</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                        openAccordion === 2
+                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                          : "bg-white/80 text-slate-600 border border-slate-200"
+                      }`}
+                    >
+                      {currentStage.label} · {currentStage.percentage}%
+                    </span>
+                  </button>
+
+                  {/* Tab 3: 3. Presupuesto y Costos */}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={openAccordion === 3}
+                    onClick={() => setOpenAccordion(3)}
+                    className={`flex-1 min-w-max px-3.5 py-2 rounded-t-xl rounded-b-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                      openAccordion === 3
+                        ? "bg-white text-blue-700 font-bold shadow-sm border-x border-b border-slate-200/90 border-t-4 border-t-blue-600"
+                        : "bg-slate-100/80 hover:bg-slate-200/70 text-slate-600 font-semibold hover:text-[#0F172A] border-x border-b border-slate-200/60 border-t-2 border-t-sky-300/60 hover:border-t-sky-400"
+                    }`}
+                  >
+                    <DollarSign
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        openAccordion === 3
+                          ? "text-blue-600"
+                          : "text-slate-400"
+                      }`}
+                    />
+                    <span>3. Presupuesto y Costos</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                        openAccordion === 3
+                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                          : "bg-white/80 text-slate-600 border border-slate-200"
+                      }`}
+                    >
+                      {formatARS(totalBudget)}
+                    </span>
+                  </button>
+
+                  {/* Tab 4: 4. Inventario y Repuestos */}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={openAccordion === 4}
+                    onClick={() => setOpenAccordion(4)}
+                    className={`flex-1 min-w-max px-3.5 py-2 rounded-t-xl rounded-b-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                      openAccordion === 4
+                        ? "bg-white text-blue-700 font-bold shadow-sm border-x border-b border-slate-200/90 border-t-4 border-t-blue-600"
+                        : "bg-slate-100/80 hover:bg-slate-200/70 text-slate-600 font-semibold hover:text-[#0F172A] border-x border-b border-slate-200/60 border-t-2 border-t-sky-300/60 hover:border-t-sky-400"
+                    }`}
+                  >
+                    <Package
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        openAccordion === 4
+                          ? "text-blue-600"
+                          : "text-slate-400"
+                      }`}
+                    />
+                    <span>4. Inventario y Repuestos</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                        openAccordion === 4
+                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                          : "bg-white/80 text-slate-600 border border-slate-200"
+                      }`}
+                    >
+                      {activeVehicle.parts.length} ítems
+                    </span>
+                  </button>
+
+                  {/* Tab 5: 5. Bitácora del Mecánico */}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={openAccordion === 5}
+                    onClick={() => setOpenAccordion(5)}
+                    className={`flex-1 min-w-max px-3.5 py-2 rounded-t-xl rounded-b-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
+                      openAccordion === 5
+                        ? "bg-white text-blue-700 font-bold shadow-sm border-x border-b border-slate-200/90 border-t-4 border-t-blue-600"
+                        : "bg-slate-100/80 hover:bg-slate-200/70 text-slate-600 font-semibold hover:text-[#0F172A] border-x border-b border-slate-200/60 border-t-2 border-t-sky-300/60 hover:border-t-sky-400"
+                    }`}
+                  >
+                    <FileText
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        openAccordion === 5
+                          ? "text-blue-600"
+                          : "text-slate-400"
+                      }`}
+                    />
+                    <span>5. Bitácora del Mecánico</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                        openAccordion === 5
+                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                          : "bg-white/80 text-slate-600 border border-slate-200"
+                      }`}
+                    >
+                      {latestEvent?.time || "Reciente"}
+                    </span>
+                  </button>
+                </div>
+
+                {/* ================= PANEL DINÁMICO ACTIVO (FLEX-1 MIN-H-0 SIN SCROLL INTERNO EN DESKTOP) ================= */}
+                <div className="flex-1 min-h-0 flex flex-col bg-white rounded-2xl border border-[#E2E8F0] shadow-xs overflow-hidden">
+                  {/* ================= TAB 1: 1. FICHA TÉCNICA, CLIENTE & TRAZABILIDAD QR ================= */}
+                  {openAccordion === 1 && (
+                    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 sm:p-5 lg:overflow-hidden">
+                      {/* Columna Izquierda (7 cols en lg): Identidad del Vehículo + Datos del Propietario */}
+                      <div className="lg:col-span-7 flex flex-col justify-between gap-3.5 min-h-0">
+                        {/* Tarjeta 1A: Identidad del Vehículo y Especificaciones Técnicas */}
+                        <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex flex-col justify-between gap-3.5 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <MercosurPlateBadge plate={activeVehicle.plate} />
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                                    {activeVehicle.bayNumber}
+                                  </span>
+                                  <span className="font-mono text-xs font-extrabold text-slate-600 bg-white px-2 py-0.5 rounded border border-[#E2E8F0]">
+                                    Orden {activeVehicle.orderNumber}
+                                  </span>
+                                  <span className="text-[11px] font-bold text-slate-500">
+                                    Año {activeVehicle.year}
+                                  </span>
+                                </div>
+                                <h2 className="text-lg sm:text-xl font-black text-[#0F172A] tracking-tight truncate mt-1">
+                                  {activeVehicle.model}{" "}
+                                  <span className="text-[#2563EB]">
+                                    {activeVehicle.engineSpec}
+                                  </span>
+                                </h2>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setOpenAccordion(2)}
+                              className="px-3 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer shrink-0"
+                            >
+                              {currentStage.label} ({currentStage.percentage}%) →
+                            </button>
+                          </div>
+
+                          {/* 4 Píldoras de Especificaciones Técnicas */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                            <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                                <Gauge className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
+                                  Kilometraje
+                                </span>
+                                <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-1">
+                                  {activeVehicle.mileage}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                                <Wrench className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
+                                  Motorización
+                                </span>
+                                <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-1">
+                                  {activeVehicle.engineSpec}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-white border border-[#E2E8F0] flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                                <Clock className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
+                                  Ingreso Bahía
+                                </span>
+                                <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-1">
+                                  {activeVehicle.checkInTime}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="p-3 rounded-xl bg-[#EFF6FF] border border-blue-200 flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-lg bg-[#2563EB] text-white flex items-center justify-center shrink-0">
+                                <Calendar className="w-4 h-4" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-[9px] font-bold uppercase text-[#1D4ED8] block leading-none">
+                                  Entrega Estimada
+                                </span>
+                                <span className="text-xs font-extrabold text-[#1D4ED8] truncate block mt-1">
+                                  {activeVehicle.estimatedDelivery}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Resumen de Intervención Activa */}
+                          <div className="px-3.5 py-2.5 rounded-xl bg-white border border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
+                              <span className="text-slate-500 font-semibold">
+                                Componente en intervención:
+                              </span>
+                              <strong className="text-[#0F172A] font-extrabold">
+                                {activeVehicle.activeComponent}
+                              </strong>
+                            </div>
+                            <span className="text-[11px] font-bold text-[#1D4ED8]">
+                              Presupuesto: {formatARS(totalBudget)} (
+                              {activeVehicle.budgetApproved
+                                ? "Aprobado"
+                                : "Pendiente"}
+                              )
                             </span>
                           </div>
-                          <h2 className="text-base sm:text-lg font-black text-[#0F172A] tracking-tight truncate mt-0.5">
-                            {activeVehicle.model} {activeVehicle.engineSpec}
-                          </h2>
                         </div>
-                      </div>
 
-                      {/* Propietario con Contacto Rápido */}
-                      <div className="flex items-center justify-between sm:justify-end gap-2 bg-[#F8FAFC] px-3 py-1.5 rounded-xl border border-[#E2E8F0] w-full sm:w-auto">
-                        <div className="text-left sm:text-right">
-                          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
-                            Propietario
-                          </span>
-                          <span className="text-xs font-extrabold text-[#0F172A]">
-                            {activeVehicle.ownerName}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 pl-2 border-l border-[#E2E8F0]">
-                          <button
-                            type="button"
-                            onClick={handleWhatsAppNotify}
-                            title={`WhatsApp a ${activeVehicle.phone}`}
-                            className="p-1.5 rounded-lg bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white transition-colors cursor-pointer"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5" />
-                          </button>
-                          <a
-                            href={`tel:${activeVehicle.phone.replace(
-                              /[^0-9+]/g,
-                              ""
-                            )}`}
-                            title={activeVehicle.phone}
-                            className="p-1.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-slate-600 hover:text-[#2563EB] border border-[#E2E8F0] transition-colors"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                          </a>
-                          <a
-                            href={`mailto:${activeVehicle.email}`}
-                            title={activeVehicle.email}
-                            className="p-1.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-slate-600 hover:text-[#2563EB] border border-[#E2E8F0] transition-colors"
-                          >
-                            <Mail className="w-3.5 h-3.5" />
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Grilla Adaptable de Píldoras de Datos Técnicos */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      <div className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center gap-2">
-                        <Gauge className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
-                        <div className="min-w-0">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
-                            Kilometraje
-                          </span>
-                          <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-0.5">
-                            {activeVehicle.mileage}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center gap-2">
-                        <Wrench className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
-                        <div className="min-w-0">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
-                            Motorización
-                          </span>
-                          <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-0.5">
-                            {activeVehicle.engineSpec}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-[#2563EB] shrink-0" />
-                        <div className="min-w-0">
-                          <span className="text-[9px] font-bold uppercase text-slate-400 block leading-none">
-                            Ingreso
-                          </span>
-                          <span className="text-xs font-extrabold text-[#0F172A] truncate block mt-0.5">
-                            {activeVehicle.checkInTime}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="px-2.5 py-1.5 rounded-xl bg-[#EFF6FF]/60 border border-blue-200/80 flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-[#1D4ED8] shrink-0" />
-                        <div className="min-w-0">
-                          <span className="text-[9px] font-bold uppercase text-[#1D4ED8] block leading-none">
-                            Entrega Estimada
-                          </span>
-                          <span className="text-xs font-extrabold text-[#1D4ED8] truncate block mt-0.5">
-                            {activeVehicle.estimatedDelivery}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bloque Derecho (4 columnas en lg - Recuadro QR y Vista Cliente) */}
-                  <div className="col-span-1 lg:col-span-4 w-full bg-blue-50/70 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-                    <div
-                      onClick={() => setIsClientDrawerOpen(true)}
-                      className="relative cursor-pointer shrink-0 group"
-                      title={`Abrir Vista del Cliente: ${dynamicClientUrl}`}
-                    >
-                      <RealisticQrCode
-                        value={`${origin}/client/${activeVehicle.plate.replace(/\s+/g, "-")}`}
-                        size={84}
-                        sizeClass="w-20 h-20"
-                        imageSettings={{
-                          src: "/SVG_redondo.svg",
-                          width: 28,
-                          height: 28,
-                          excavate: true,
-                        }}
-                      />
-                    </div>
-
-                    <div className="w-full flex-1 min-w-0 flex flex-col justify-between gap-1.5">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#1D4ED8]">
-                          Trazabilidad QR
-                        </span>
-                        <span className="font-mono text-[10px] font-bold bg-white text-[#0F172A] px-1.5 py-0.5 rounded border border-blue-200 truncate">
-                          /client/{activePlateSlug}
-                        </span>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setIsClientDrawerOpen(true)}
-                        className="w-full py-2 px-3 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-2xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <Smartphone className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">📱 Ver Vista del Cliente</span>
-                      </button>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowQrStickerModal(true);
-                            triggerToast(
-                              `Etiqueta térmica QR generada para ${activeVehicle.plate}`,
-                              `Lista para imprimir y adherir al parabrisas (${dynamicClientUrl})`,
-                              "info"
-                            );
-                          }}
-                          className="flex-1 py-1.5 px-2 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer"
-                        >
-                          <Printer className="w-3 h-3 text-[#2563EB]" />
-                          <span>Imprimir QR</span>
-                        </button>
-                        <Link
-                          href={activeClientPath}
-                          target="_blank"
-                          title={`Abrir página pública ${dynamicClientUrl}`}
-                          className="py-1.5 px-2.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold transition-colors inline-flex items-center justify-center"
-                        >
-                          <ExternalLink className="w-3 h-3 text-[#2563EB]" />
-                        </Link>
-                        <button
-                          type="button"
-                          onClick={handleCopyLink}
-                          title="Copiar link dinámico de seguimiento"
-                          className="py-1.5 px-2.5 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-[11px] font-bold transition-colors cursor-pointer"
-                        >
-                          <Copy className="w-3 h-3 text-[#2563EB]" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-
-                {/* 4. BARRA DE PESTAÑAS TIPO NAVEGADOR WEB (TABS BAR) + CONTENEDOR DINÁMICO ESPACIOSO */}
-                <section className="flex-1 lg:min-h-0 flex flex-col gap-3 lg:overflow-hidden">
-                  {/* BARRA DE PESTAÑAS HORIZONTAL (SEGMENT CONTROL / BROWSER TABS) */}
-                  <div
-                    role="tablist"
-                    aria-label="Secciones de la Orden de Trabajo"
-                    className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1 overflow-x-auto flex-nowrap shrink-0"
-                  >
-                    {/* Tab 1: 1. Estado & Telemetría */}
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={openAccordion === 1}
-                      onClick={() => setOpenAccordion(1)}
-                      className={`flex-1 min-w-max px-3.5 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-                        openAccordion === 1
-                          ? "bg-white text-blue-600 font-bold shadow-sm border border-slate-200/80"
-                          : "text-slate-600 font-semibold hover:text-[#0F172A] hover:bg-white/50 border border-transparent"
-                      }`}
-                    >
-                      <Activity
-                        className={`w-3.5 h-3.5 shrink-0 ${
-                          openAccordion === 1
-                            ? "text-blue-600"
-                            : "text-slate-400"
-                        }`}
-                      />
-                      <span>1. Estado &amp; Telemetría</span>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                          openAccordion === 1
-                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                            : "bg-slate-200/70 text-slate-600"
-                        }`}
-                      >
-                        {currentStage.label} · {currentStage.percentage}%
-                      </span>
-                    </button>
-
-                    {/* Tab 2: 2. Presupuesto y Costos */}
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={openAccordion === 2}
-                      onClick={() => setOpenAccordion(2)}
-                      className={`flex-1 min-w-max px-3.5 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-                        openAccordion === 2
-                          ? "bg-white text-blue-600 font-bold shadow-sm border border-slate-200/80"
-                          : "text-slate-600 font-semibold hover:text-[#0F172A] hover:bg-white/50 border border-transparent"
-                      }`}
-                    >
-                      <DollarSign
-                        className={`w-3.5 h-3.5 shrink-0 ${
-                          openAccordion === 2
-                            ? "text-blue-600"
-                            : "text-slate-400"
-                        }`}
-                      />
-                      <span>2. Presupuesto y Costos</span>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                          openAccordion === 2
-                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                            : "bg-slate-200/70 text-slate-600"
-                        }`}
-                      >
-                        {formatARS(totalBudget)}
-                      </span>
-                    </button>
-
-                    {/* Tab 3: 3. Inventario y Repuestos */}
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={openAccordion === 3}
-                      onClick={() => setOpenAccordion(3)}
-                      className={`flex-1 min-w-max px-3.5 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-                        openAccordion === 3
-                          ? "bg-white text-blue-600 font-bold shadow-sm border border-slate-200/80"
-                          : "text-slate-600 font-semibold hover:text-[#0F172A] hover:bg-white/50 border border-transparent"
-                      }`}
-                    >
-                      <Package
-                        className={`w-3.5 h-3.5 shrink-0 ${
-                          openAccordion === 3
-                            ? "text-blue-600"
-                            : "text-slate-400"
-                        }`}
-                      />
-                      <span>3. Inventario y Repuestos</span>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                          openAccordion === 3
-                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                            : "bg-slate-200/70 text-slate-600"
-                        }`}
-                      >
-                        {activeVehicle.parts.length} ítems
-                      </span>
-                    </button>
-
-                    {/* Tab 4: 4. Bitácora del Mecánico */}
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={openAccordion === 4}
-                      onClick={() => setOpenAccordion(4)}
-                      className={`flex-1 min-w-max px-3.5 py-2 rounded-lg text-xs transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap ${
-                        openAccordion === 4
-                          ? "bg-white text-blue-600 font-bold shadow-sm border border-slate-200/80"
-                          : "text-slate-600 font-semibold hover:text-[#0F172A] hover:bg-white/50 border border-transparent"
-                      }`}
-                    >
-                      <FileText
-                        className={`w-3.5 h-3.5 shrink-0 ${
-                          openAccordion === 4
-                            ? "text-blue-600"
-                            : "text-slate-400"
-                        }`}
-                      />
-                      <span>4. Bitácora del Mecánico</span>
-                      <span
-                        className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                          openAccordion === 4
-                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                            : "bg-slate-200/70 text-slate-600"
-                        }`}
-                      >
-                        {latestEvent?.time || "Reciente"}
-                      </span>
-                    </button>
-                  </div>
-
-                  {/* ================= PANEL DINÁMICO ACTIVO (100% ESPACIO DISPONIBLE) ================= */}
-                  <div className="flex-1 lg:min-h-0 flex flex-col bg-white rounded-2xl border border-[#E2E8F0] shadow-xs overflow-hidden">
-                    {/* ================= TAB 1: 1. ESTADO & TELEMETRÍA ================= */}
-                    {openAccordion === 1 && (
-                      <div className="flex-1 lg:min-h-0 flex flex-col justify-between p-4 sm:p-5 gap-4 lg:overflow-y-auto">
-                        <div className="space-y-4">
-                          {/* Encabezado del Panel de Telemetría */}
-                          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#E2E8F0]">
+                        {/* Tarjeta 1B: Datos del Propietario / Cliente y Contacto Directo */}
+                        <div className="p-4 rounded-2xl bg-white border border-[#E2E8F0] shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
+                          <div className="flex items-center gap-3.5">
+                            <div className="w-11 h-11 rounded-2xl bg-[#EFF6FF] border border-blue-200 text-[#1D4ED8] font-black text-sm flex items-center justify-center shrink-0">
+                              {activeVehicle.ownerName
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")}
+                            </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-pulse" />
-                                <h3 className="text-sm sm:text-base font-black text-[#0F172A]">
-                                  Estado Operativo y Telemetría de Bahía
-                                </h3>
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                                  Propietario Titular
+                                </span>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                                  {activeVehicle.historicalServices} servicios previos
+                                </span>
                               </div>
-                              <p className="text-xs text-slate-500 mt-0.5">
-                                Tarea activa en{" "}
-                                <strong className="text-[#0F172A]">
-                                  {activeVehicle.bayNumber}
-                                </strong>
-                                :{" "}
-                                <span className="font-bold text-[#2563EB]">
-                                  {activeVehicle.activeComponent}
-                                </span>{" "}
-                                — Selecciona una etapa del Stepper para
-                                sincronizar el avance con el QR del cliente.
+                              <h3 className="text-base font-black text-[#0F172A] mt-0.5">
+                                {activeVehicle.ownerName}
+                              </h3>
+                              <p className="text-xs text-slate-500 font-medium">
+                                {activeVehicle.phone} · {activeVehicle.email}
                               </p>
                             </div>
-
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-[#1D4ED8] bg-[#EFF6FF] px-3 py-1.5 rounded-xl border border-blue-200">
-                                {currentStage.defaultNote}
-                              </span>
-                              <span className="text-sm font-black px-3 py-1.5 rounded-xl bg-[#2563EB] text-white shadow-2xs">
-                                {currentStage.percentage}%
-                              </span>
-                            </div>
                           </div>
 
-                          {/* Barra de progreso principal de gran formato */}
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
-                                Progreso General de la Orden{" "}
-                                {activeVehicle.orderNumber}
-                              </span>
-                              <span className="font-extrabold text-[#1D4ED8]">
-                                Etapa {activeVehicle.stageIndex + 1} de{" "}
-                                {STAGES.length} ({currentStage.label})
-                              </span>
-                            </div>
-                            <div className="w-full h-3.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full overflow-hidden p-0.5">
-                              <div
-                                style={{ width: `${currentStage.percentage}%` }}
-                                className="h-full bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#3B82F6] transition-all duration-500 rounded-full"
-                              />
-                            </div>
-                          </div>
-
-                          {/* Stepper Interactivo de 6 Etapas Desplegado en Grande */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 pt-1">
-                            {STAGES.map((stage, index) => {
-                              const isCompleted =
-                                index < activeVehicle.stageIndex;
-                              const isCurrent =
-                                index === activeVehicle.stageIndex;
-
-                              return (
-                                <button
-                                  key={stage.id}
-                                  type="button"
-                                  onClick={() => handleStageChange(stage.id)}
-                                  className={`p-3.5 sm:p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[120px] sm:min-h-[140px] ${
-                                    isCurrent
-                                      ? "bg-[#EFF6FF] border-2 border-[#2563EB] shadow-sm ring-2 ring-[#2563EB]/10"
-                                      : isCompleted
-                                      ? "bg-[#F8FAFC] border-blue-200 hover:bg-[#EFF6FF]/60"
-                                      : "bg-white border-[#E2E8F0] hover:border-[#3B82F6] hover:bg-[#F8FAFC]/50"
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between w-full">
-                                    <span
-                                      className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
-                                        isCompleted
-                                          ? "bg-[#1D4ED8] text-white"
-                                          : isCurrent
-                                          ? "bg-[#2563EB] text-white ring-4 ring-blue-200/80"
-                                          : "bg-[#F8FAFC] text-slate-400 border border-[#CBD5E1]"
-                                      }`}
-                                    >
-                                      {isCompleted ||
-                                      (isCurrent && stage.id === 5) ? (
-                                        <Check className="w-4 h-4 stroke-[3]" />
-                                      ) : (
-                                        index + 1
-                                      )}
-                                    </span>
-                                    <span
-                                      className={`text-xs font-extrabold px-2 py-0.5 rounded-full ${
-                                        isCurrent
-                                          ? "bg-[#2563EB] text-white"
-                                          : isCompleted
-                                          ? "bg-blue-100 text-[#1D4ED8]"
-                                          : "bg-slate-100 text-slate-400"
-                                      }`}
-                                    >
-                                      {stage.percentage}%
-                                    </span>
-                                  </div>
-
-                                  <div className="my-2">
-                                    <p
-                                      className={`text-xs sm:text-sm leading-tight ${
-                                        isCurrent
-                                          ? "font-black text-[#0F172A]"
-                                          : isCompleted
-                                          ? "font-bold text-[#1D4ED8]"
-                                          : "font-semibold text-slate-500"
-                                      }`}
-                                    >
-                                      {stage.label}
-                                    </p>
-                                    <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-snug">
-                                      {stage.defaultNote}
-                                    </p>
-                                  </div>
-
-                                  <div className="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-bold">
-                                    <span
-                                      className={
-                                        isCurrent
-                                          ? "text-[#2563EB]"
-                                          : isCompleted
-                                          ? "text-[#1D4ED8]"
-                                          : "text-slate-400"
-                                      }
-                                    >
-                                      {isCurrent
-                                        ? "● En curso"
-                                        : isCompleted
-                                        ? "✓ Completada"
-                                        : "Pendiente"}
-                                    </span>
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Barra Inferior de Acciones de Estado y WhatsApp */}
-                        <div className="pt-3.5 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 shrink-0">
                           <div className="flex items-center gap-2 w-full sm:w-auto">
                             <button
                               type="button"
-                              disabled={activeVehicle.stageIndex === 0}
-                              onClick={() =>
-                                handleStageChange(
-                                  Math.max(
-                                    0,
-                                    activeVehicle.stageIndex - 1
-                                  ) as StageIndex
-                                )
-                              }
-                              className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] disabled:opacity-40 text-xs font-bold text-[#0F172A] border border-[#E2E8F0] transition-colors cursor-pointer"
-                            >
-                              ← Etapa Anterior
-                            </button>
-                            <button
-                              type="button"
-                              disabled={activeVehicle.stageIndex === 5}
-                              onClick={() =>
-                                handleStageChange(
-                                  Math.min(
-                                    5,
-                                    activeVehicle.stageIndex + 1
-                                  ) as StageIndex
-                                )
-                              }
-                              className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 text-xs font-bold text-white shadow-2xs transition-colors cursor-pointer"
-                            >
-                              Avanzar Etapa →
-                            </button>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                            <button
-                              type="button"
-                              onClick={() => setOpenAccordion(4)}
-                              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-xs font-bold text-[#0F172A] border border-[#E2E8F0] transition-colors cursor-pointer"
-                            >
-                              Ver Bitácora ({activeVehicle.timeline.length})
-                            </button>
-                            <button
-                              type="button"
                               onClick={handleWhatsAppNotify}
-                              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+                              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
                             >
                               <MessageCircle className="w-3.5 h-3.5" />
-                              <span>Notificar Avance por WhatsApp</span>
+                              <span>WhatsApp</span>
+                            </button>
+                            <a
+                              href={`tel:${activeVehicle.phone.replace(
+                                /[^0-9+]/g,
+                                ""
+                              )}`}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-[#E2E8F0] text-xs font-bold transition-colors"
+                            >
+                              <Phone className="w-3.5 h-3.5 text-[#2563EB]" />
+                              <span>Llamar</span>
+                            </a>
+                            <a
+                              href={`mailto:${activeVehicle.email}`}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-[#E2E8F0] text-xs font-bold transition-colors"
+                            >
+                              <Mail className="w-3.5 h-3.5 text-[#2563EB]" />
+                              <span>Email</span>
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Columna Derecha (5 cols en lg): Módulo Destacado de Trazabilidad QR */}
+                      <div className="lg:col-span-5 bg-gradient-to-b from-[#EFF6FF]/90 to-[#F8FAFC] border-2 border-blue-200/90 rounded-2xl p-4 sm:p-5 flex flex-col justify-between gap-3 min-h-0">
+                        <div className="flex items-center justify-between gap-2 border-b border-blue-200/70 pb-2.5">
+                          <div className="flex items-center gap-2">
+                            <QrCode className="w-4 h-4 text-[#2563EB]" />
+                            <span className="text-xs font-extrabold uppercase tracking-wider text-[#1D4ED8]">
+                              Trazabilidad QR Dinámica
+                            </span>
+                          </div>
+                          <span className="font-mono text-[10px] font-bold bg-white text-[#0F172A] px-2 py-0.5 rounded-md border border-blue-200">
+                            {activeVehicle.traceId}
+                          </span>
+                        </div>
+
+                        {/* QR Code Centered Display */}
+                        <div className="flex flex-col sm:flex-row lg:flex-col xl:flex-row items-center justify-center gap-4 my-auto py-1">
+                          <div
+                            onClick={() => setIsClientDrawerOpen(true)}
+                            className="cursor-pointer group shrink-0"
+                            title={`Abrir Vista del Cliente: ${dynamicClientUrl}`}
+                          >
+                            <RealisticQrCode
+                              value={`${origin}/client/${activeVehicle.plate.replace(/\s+/g, "-")}`}
+                              size={116}
+                              sizeClass="w-28 h-28"
+                              imageSettings={{
+                                src: "/SVG_redondo.svg",
+                                width: 28,
+                                height: 28,
+                                excavate: true,
+                              }}
+                            />
+                          </div>
+
+                          <div className="space-y-2 text-center sm:text-left lg:text-center xl:text-left min-w-0">
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-white text-[#1D4ED8] border border-blue-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] animate-pulse" />
+                              Sincronizado en Vivo
+                            </span>
+                            <p className="text-xs font-bold text-[#0F172A] leading-snug">
+                              Escaneo directo para seguimiento móvil del cliente
+                            </p>
+                            <div className="font-mono text-[11px] font-bold bg-white text-[#1D4ED8] px-2.5 py-1 rounded-lg border border-blue-200 truncate">
+                              /client/{activePlateSlug}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Botones de Acción QR */}
+                        <div className="space-y-2 pt-2 border-t border-blue-200/70">
+                          <button
+                            type="button"
+                            onClick={() => setIsClientDrawerOpen(true)}
+                            className="w-full py-2.5 px-4 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold shadow-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                          >
+                            <Smartphone className="w-4 h-4 shrink-0" />
+                            <span>📱 Ver Vista del Cliente</span>
+                          </button>
+
+                          <div className="grid grid-cols-3 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowQrStickerModal(true);
+                                triggerToast(
+                                  `Etiqueta térmica QR generada para ${activeVehicle.plate}`,
+                                  `Lista para imprimir y adherir al parabrisas (${dynamicClientUrl})`,
+                                  "info"
+                                );
+                              }}
+                              className="py-2 px-2.5 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Printer className="w-3.5 h-3.5 text-[#2563EB]" />
+                              <span>Imprimir QR</span>
+                            </button>
+
+                            <Link
+                              href={activeClientPath}
+                              target="_blank"
+                              className="py-2 px-2.5 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5 text-[#2563EB]" />
+                              <span>Abrir Ruta</span>
+                            </Link>
+
+                            <button
+                              type="button"
+                              onClick={handleCopyLink}
+                              className="py-2 px-2.5 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#0F172A] hover:text-[#1D4ED8] border border-blue-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Copy className="w-3.5 h-3.5 text-[#2563EB]" />
+                              <span>Copiar Link</span>
                             </button>
                           </div>
                         </div>
                       </div>
-                    )}
+                    </div>
+                  )}
 
-                    {/* ================= TAB 2: 2. PRESUPUESTO Y COSTOS ================= */}
-                    {openAccordion === 2 && (
-                      <div className="flex-1 lg:min-h-0 flex flex-col justify-between p-4 sm:p-5 gap-4 lg:overflow-hidden">
-                        {/* 4 Tarjetas Superiores de Resumen Financiero */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
-                          <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                              Subtotal Repuestos
-                            </span>
-                            <p className="text-lg font-black text-[#0F172A] mt-1">
-                              {formatARS(financialSummary.partsSubtotal)}
+                  {/* ================= TAB 2: 2. ESTADO & TELEMETRÍA ================= */}
+                  {openAccordion === 2 && (
+                    <div className="flex-1 min-h-0 flex flex-col justify-between p-4 sm:p-5 gap-3.5 lg:overflow-hidden">
+                      <div className="space-y-3.5">
+                        {/* Encabezado del Panel de Telemetría */}
+                        <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#E2E8F0]">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-pulse" />
+                              <h3 className="text-sm sm:text-base font-black text-[#0F172A]">
+                                Estado Operativo y Telemetría de Bahía
+                              </h3>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-0.5">
+                              Tarea activa en{" "}
+                              <strong className="text-[#0F172A]">
+                                {activeVehicle.bayNumber}
+                              </strong>
+                              :{" "}
+                              <span className="font-bold text-[#2563EB]">
+                                {activeVehicle.activeComponent}
+                              </span>{" "}
+                              — Selecciona una etapa del Stepper para
+                              sincronizar el avance con el QR del cliente.
                             </p>
-                            <span className="text-[11px] text-slate-500">
-                              Insumos y piezas originales
-                            </span>
                           </div>
 
-                          <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                              Subtotal Mano de Obra
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-[#1D4ED8] bg-[#EFF6FF] px-3 py-1 rounded-xl border border-blue-200">
+                              {currentStage.defaultNote}
                             </span>
-                            <p className="text-lg font-black text-[#0F172A] mt-1">
-                              {formatARS(financialSummary.laborSubtotal)}
-                            </p>
-                            <span className="text-[11px] text-slate-500">
-                              Horas técnicas de bahía
+                            <span className="text-sm font-black px-3 py-1 rounded-xl bg-[#2563EB] text-white shadow-2xs">
+                              {currentStage.percentage}%
                             </span>
                           </div>
+                        </div>
 
-                          <div className="p-3.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
-                            <span className="text-[10px] font-bold uppercase text-slate-400 block">
-                              Estado de Aprobación
+                        {/* Barra de progreso principal de gran formato */}
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">
+                              Progreso General de la Orden{" "}
+                              {activeVehicle.orderNumber}
                             </span>
-                            <div className="mt-1.5">
+                            <span className="font-extrabold text-[#1D4ED8]">
+                              Etapa {activeVehicle.stageIndex + 1} de{" "}
+                              {STAGES.length} ({currentStage.label})
+                            </span>
+                          </div>
+                          <div className="w-full h-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-full overflow-hidden p-0.5">
+                            <div
+                              style={{ width: `${currentStage.percentage}%` }}
+                              className="h-full bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#3B82F6] transition-all duration-500 rounded-full"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Stepper Interactivo de 6 Etapas Desplegado en Grande */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                          {STAGES.map((stage, index) => {
+                            const isCompleted =
+                              index < activeVehicle.stageIndex;
+                            const isCurrent =
+                              index === activeVehicle.stageIndex;
+
+                            return (
                               <button
+                                key={stage.id}
                                 type="button"
-                                onClick={handleToggleBudgetApproval}
-                                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
-                                  activeVehicle.budgetApproved
-                                    ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                                    : "bg-slate-100 text-slate-700 border border-[#CBD5E1]"
+                                onClick={() => handleStageChange(stage.id)}
+                                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between min-h-[125px] ${
+                                  isCurrent
+                                    ? "bg-[#EFF6FF] border-2 border-[#2563EB] shadow-sm ring-2 ring-[#2563EB]/10"
+                                    : isCompleted
+                                    ? "bg-[#F8FAFC] border-blue-200 hover:bg-[#EFF6FF]/60"
+                                    : "bg-white border-[#E2E8F0] hover:border-[#3B82F6] hover:bg-[#F8FAFC]/50"
                                 }`}
                               >
-                                <ShieldCheck className="w-3.5 h-3.5 text-[#2563EB]" />
-                                {activeVehicle.budgetApproved
-                                  ? "Aprobado por QR"
-                                  : "Pendiente Firma"}
-                              </button>
-                            </div>
-                            <span className="text-[10px] text-slate-400 block mt-1">
-                              Clic para conmutar estado
-                            </span>
-                          </div>
-
-                          <div className="p-3.5 rounded-xl bg-[#EFF6FF] border border-blue-200">
-                            <span className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block">
-                              Total Final Presupuesto
-                            </span>
-                            <p className="text-xl font-black text-[#1D4ED8] mt-1">
-                              {formatARS(totalBudget)}
-                            </p>
-                            <span className="text-[11px] font-semibold text-[#2563EB]">
-                              IVA Incluido · Sincronizado QR
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Tabla Detallada de Costos por Concepto */}
-                        <div className="flex-1 lg:min-h-0 overflow-x-auto lg:overflow-y-auto border border-[#E2E8F0] rounded-xl">
-                          <table className="w-full min-w-[540px] text-left border-collapse">
-                            <thead className="sticky top-0 bg-[#F8FAFC] z-10">
-                              <tr className="border-b border-[#E2E8F0] text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                <th className="py-2.5 px-3.5">Concepto / Descripción</th>
-                                <th className="py-2.5 px-3">Rubro</th>
-                                <th className="py-2.5 px-3">Cantidad</th>
-                                <th className="py-2.5 px-3">Costo Unitario</th>
-                                <th className="py-2.5 px-3">Estado</th>
-                                <th className="py-2.5 px-3.5 text-right">Subtotal</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#E2E8F0] text-xs">
-                              {activeVehicle.parts.map((item) => {
-                                const rowTotal = item.quantity * item.unitPrice;
-                                const isLabor =
-                                  item.category === "Mano de Obra" ||
-                                  item.unit === "hrs" ||
-                                  item.unit === "srv";
-                                return (
-                                  <tr
-                                    key={item.id}
-                                    className="hover:bg-[#F8FAFC]"
+                                <div className="flex items-center justify-between w-full">
+                                  <span
+                                    className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black shrink-0 ${
+                                      isCompleted
+                                        ? "bg-[#1D4ED8] text-white"
+                                        : isCurrent
+                                        ? "bg-[#2563EB] text-white ring-4 ring-blue-200/80"
+                                        : "bg-[#F8FAFC] text-slate-400 border border-[#CBD5E1]"
+                                    }`}
                                   >
-                                    <td className="py-2.5 px-3.5 font-bold text-[#0F172A]">
-                                      {item.description}
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                      <span
-                                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                                          isLabor
-                                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                                            : "bg-slate-100 text-slate-700"
-                                        }`}
-                                      >
-                                        {isLabor ? "Mano de Obra" : "Repuesto"}
-                                      </span>
-                                    </td>
-                                    <td className="py-2.5 px-3 text-slate-600 font-medium">
-                                      {item.quantity} {item.unit}
-                                    </td>
-                                    <td className="py-2.5 px-3 text-slate-600 font-medium">
-                                      {formatARS(item.unitPrice)}
-                                    </td>
-                                    <td className="py-2.5 px-3">
-                                      <span className="text-[11px] font-bold text-[#1D4ED8]">
-                                        {item.status}
-                                      </span>
-                                    </td>
-                                    <td className="py-2.5 px-3.5 text-right font-extrabold text-[#0F172A]">
-                                      {formatARS(rowTotal)}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
+                                    {isCompleted ||
+                                    (isCurrent && stage.id === 5) ? (
+                                      <Check className="w-4 h-4 stroke-[3]" />
+                                    ) : (
+                                      index + 1
+                                    )}
+                                  </span>
+                                  <span
+                                    className={`text-xs font-extrabold px-2 py-0.5 rounded-full ${
+                                      isCurrent
+                                        ? "bg-[#2563EB] text-white"
+                                        : isCompleted
+                                        ? "bg-blue-100 text-[#1D4ED8]"
+                                        : "bg-slate-100 text-slate-400"
+                                    }`}
+                                  >
+                                    {stage.percentage}%
+                                  </span>
+                                </div>
 
-                        {/* Barra Inferior de Acciones de Presupuesto */}
-                        <div className="pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                                <div className="my-2">
+                                  <p
+                                    className={`text-xs sm:text-sm leading-tight ${
+                                      isCurrent
+                                        ? "font-black text-[#0F172A]"
+                                        : isCompleted
+                                        ? "font-bold text-[#1D4ED8]"
+                                        : "font-semibold text-slate-500"
+                                    }`}
+                                  >
+                                    {stage.label}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-snug">
+                                    {stage.defaultNote}
+                                  </p>
+                                </div>
+
+                                <div className="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] font-bold">
+                                  <span
+                                    className={
+                                      isCurrent
+                                        ? "text-[#2563EB]"
+                                        : isCompleted
+                                        ? "text-[#1D4ED8]"
+                                        : "text-slate-400"
+                                    }
+                                  >
+                                    {isCurrent
+                                      ? "● En curso"
+                                      : isCompleted
+                                      ? "✓ Completada"
+                                      : "Pendiente"}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Barra Inferior de Acciones de Estado y WhatsApp */}
+                      <div className="pt-3 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-3 shrink-0">
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
                           <button
                             type="button"
-                            onClick={() => setOpenAccordion(3)}
-                            className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-xs font-bold text-[#0F172A] border border-[#E2E8F0] cursor-pointer"
+                            disabled={activeVehicle.stageIndex === 0}
+                            onClick={() =>
+                              handleStageChange(
+                                Math.max(
+                                  0,
+                                  activeVehicle.stageIndex - 1
+                                ) as StageIndex
+                              )
+                            }
+                            className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] disabled:opacity-40 text-xs font-bold text-[#0F172A] border border-[#E2E8F0] transition-colors cursor-pointer"
                           >
-                            Ir a Inventario y Repuestos →
+                            ← Etapa Anterior
                           </button>
+                          <button
+                            type="button"
+                            disabled={activeVehicle.stageIndex === 5}
+                            onClick={() =>
+                              handleStageChange(
+                                Math.min(
+                                  5,
+                                  activeVehicle.stageIndex + 1
+                                ) as StageIndex
+                              )
+                            }
+                            className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 text-xs font-bold text-white shadow-2xs transition-colors cursor-pointer"
+                          >
+                            Avanzar Etapa →
+                          </button>
+                        </div>
 
-                          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                          <button
+                            type="button"
+                            onClick={() => setOpenAccordion(5)}
+                            className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-xs font-bold text-[#0F172A] border border-[#E2E8F0] transition-colors cursor-pointer"
+                          >
+                            Ver Bitácora ({activeVehicle.timeline.length})
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleWhatsAppNotify}
+                            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white border border-blue-200 text-xs font-bold transition-colors cursor-pointer"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                            <span>Notificar Avance por WhatsApp</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ================= TAB 3: 3. PRESUPUESTO Y COSTOS ================= */}
+                  {openAccordion === 3 && (
+                    <div className="flex-1 min-h-0 flex flex-col justify-between p-4 sm:p-5 gap-3.5 lg:overflow-hidden">
+                      {/* 4 Tarjetas Superiores de Resumen Financiero */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
+                        <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                          <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                            Subtotal Repuestos
+                          </span>
+                          <p className="text-lg font-black text-[#0F172A] mt-0.5">
+                            {formatARS(financialSummary.partsSubtotal)}
+                          </p>
+                          <span className="text-[11px] text-slate-500">
+                            Insumos y piezas originales
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                          <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                            Subtotal Mano de Obra
+                          </span>
+                          <p className="text-lg font-black text-[#0F172A] mt-0.5">
+                            {formatARS(financialSummary.laborSubtotal)}
+                          </p>
+                          <span className="text-[11px] text-slate-500">
+                            Horas técnicas de bahía
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                          <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                            Estado de Aprobación
+                          </span>
+                          <div className="mt-1">
                             <button
                               type="button"
-                              onClick={() => {
-                                setIsClientDrawerOpen(true);
-                                setShowBudgetInPhone(true);
-                              }}
-                              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-[#1D4ED8] border border-blue-200 text-xs font-bold cursor-pointer"
+                              onClick={handleToggleBudgetApproval}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                                activeVehicle.budgetApproved
+                                  ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                                  : "bg-slate-100 text-slate-700 border border-[#CBD5E1]"
+                              }`}
                             >
-                              Previsualizar en Celular
+                              <ShieldCheck className="w-3.5 h-3.5 text-[#2563EB]" />
+                              {activeVehicle.budgetApproved
+                                ? "Aprobado por QR"
+                                : "Pendiente Firma"}
+                            </button>
+                          </div>
+                          <span className="text-[10px] text-slate-400 block mt-0.5">
+                            Clic para conmutar estado
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-[#EFF6FF] border border-blue-200">
+                          <span className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block">
+                            Total Final Presupuesto
+                          </span>
+                          <p className="text-xl font-black text-[#1D4ED8] mt-0.5">
+                            {formatARS(totalBudget)}
+                          </p>
+                          <span className="text-[11px] font-semibold text-[#2563EB]">
+                            IVA Incluido · Sincronizado QR
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Tabla Detallada de Costos por Concepto */}
+                      <div className="flex-1 min-h-0 overflow-x-auto lg:overflow-y-auto border border-[#E2E8F0] rounded-xl">
+                        <table className="w-full min-w-[540px] text-left border-collapse">
+                          <thead className="sticky top-0 bg-[#F8FAFC] z-10">
+                            <tr className="border-b border-[#E2E8F0] text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              <th className="py-2 px-3.5">
+                                Concepto / Descripción
+                              </th>
+                              <th className="py-2 px-3">Rubro</th>
+                              <th className="py-2 px-3">Cantidad</th>
+                              <th className="py-2 px-3">Costo Unitario</th>
+                              <th className="py-2 px-3">Estado</th>
+                              <th className="py-2 px-3.5 text-right">
+                                Subtotal
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#E2E8F0] text-xs">
+                            {activeVehicle.parts.map((item) => {
+                              const rowTotal = item.quantity * item.unitPrice;
+                              const isLabor =
+                                item.category === "Mano de Obra" ||
+                                item.unit === "hrs" ||
+                                item.unit === "srv";
+                              return (
+                                <tr
+                                  key={item.id}
+                                  className="hover:bg-[#F8FAFC]"
+                                >
+                                  <td className="py-2 px-3.5 font-bold text-[#0F172A]">
+                                    {item.description}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span
+                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                        isLabor
+                                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                                          : "bg-slate-100 text-slate-700"
+                                      }`}
+                                    >
+                                      {isLabor ? "Mano de Obra" : "Repuesto"}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3 text-slate-600 font-medium">
+                                    {item.quantity} {item.unit}
+                                  </td>
+                                  <td className="py-2 px-3 text-slate-600 font-medium">
+                                    {formatARS(item.unitPrice)}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className="text-[11px] font-bold text-[#1D4ED8]">
+                                      {item.status}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3.5 text-right font-extrabold text-[#0F172A]">
+                                    {formatARS(rowTotal)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Barra Inferior de Acciones de Presupuesto */}
+                      <div className="pt-2.5 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setOpenAccordion(4)}
+                          className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-xs font-bold text-[#0F172A] border border-[#E2E8F0] cursor-pointer"
+                        >
+                          Ir a Inventario y Repuestos →
+                        </button>
+
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsClientDrawerOpen(true);
+                              setShowBudgetInPhone(true);
+                            }}
+                            className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-[#1D4ED8] border border-blue-200 text-xs font-bold cursor-pointer"
+                          >
+                            Previsualizar en Celular
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              triggerToast(
+                                `Presupuesto Digital enviado a ${activeVehicle.ownerName}`,
+                                `Total: ${formatARS(
+                                  totalBudget
+                                )} · Link de aprobación QR activo.`,
+                                "whatsapp"
+                              )
+                            }
+                            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer"
+                          >
+                            <Send className="w-3.5 h-3.5" />
+                            <span>Enviar Presupuesto Digital</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ================= TAB 4: 4. INVENTARIO Y REPUESTOS ================= */}
+                  {openAccordion === 4 && (
+                    <div className="flex-1 min-h-0 flex flex-col justify-between p-4 sm:p-5 gap-3 lg:overflow-hidden">
+                      {/* Selector Rápido desde Pañol + Formulario Inline */}
+                      <div className="space-y-2.5 shrink-0">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-extrabold text-[#0F172A]">
+                              Asignación Rápida de Stock del Pañol:
+                            </span>
+                            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                              {inventory.slice(0, 4).map((inv) => (
+                                <button
+                                  key={inv.id}
+                                  type="button"
+                                  disabled={inv.stock <= 0}
+                                  onClick={() =>
+                                    handleAssignFromInventory(inv)
+                                  }
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white border border-blue-200 text-[11px] font-bold transition-colors cursor-pointer whitespace-nowrap disabled:opacity-40"
+                                  title={`Sumar ${inv.name} (${formatARS(
+                                    inv.unitPrice
+                                  )})`}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span>
+                                    {inv.name.split(" ").slice(0, 2).join(" ")}
+                                  </span>
+                                  <span className="opacity-75">
+                                    ({inv.stock})
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <span className="text-[11px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-2.5 py-1 rounded-full border border-blue-200">
+                            {financialSummary.installedCount} Instalados ·{" "}
+                            {financialSummary.inProgressCount} En progreso
+                          </span>
+                        </div>
+
+                        {/* Fast Inline Add Part Bar */}
+                        <form
+                          onSubmit={handleAddPartSubmit}
+                          className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-12 gap-2 items-center"
+                        >
+                          <div className="col-span-12 sm:col-span-4">
+                            <input
+                              type="text"
+                              required
+                              value={newDesc}
+                              onChange={(e) => setNewDesc(e.target.value)}
+                              placeholder="+ Agregar repuesto o mano de obra..."
+                              className="w-full px-3 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
+                            />
+                          </div>
+                          <div className="col-span-4 sm:col-span-2">
+                            <select
+                              value={newCategory}
+                              onChange={(e) =>
+                                setNewCategory(
+                                  e.target.value as
+                                    | "Repuesto"
+                                    | "Mano de Obra"
+                                )
+                              }
+                              className="w-full px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            >
+                              <option value="Repuesto">Repuesto</option>
+                              <option value="Mano de Obra">Mano de Obra</option>
+                            </select>
+                          </div>
+                          <div className="col-span-4 sm:col-span-2 flex gap-1">
+                            <input
+                              type="number"
+                              min={1}
+                              required
+                              value={newQty}
+                              onChange={(e) => setNewQty(e.target.value)}
+                              className="w-12 px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            />
+                            <select
+                              value={newUnit}
+                              onChange={(e) => setNewUnit(e.target.value)}
+                              className="flex-1 px-1 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            >
+                              <option value="u.">u.</option>
+                              <option value="hrs">hrs</option>
+                              <option value="L">L</option>
+                            </select>
+                          </div>
+                          <div className="col-span-4 sm:col-span-2">
+                            <input
+                              type="number"
+                              min={1}
+                              required
+                              value={newPrice}
+                              onChange={(e) => setNewPrice(e.target.value)}
+                              placeholder="Precio ($)"
+                              className="w-full px-2.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
+                            />
+                          </div>
+                          <div className="col-span-12 sm:col-span-2">
+                            <button
+                              type="submit"
+                              className="w-full py-1.5 px-3 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Sumar Ítem</span>
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+
+                      {/* Interactive Parts Table with Horizontal & Vertical Scroll */}
+                      <div className="overflow-x-auto lg:overflow-y-auto w-full flex-1 min-h-0 border border-[#E2E8F0] rounded-xl">
+                        <table className="w-full min-w-[540px] text-left border-collapse">
+                          <thead className="sticky top-0 bg-[#F8FAFC] z-10">
+                            <tr className="border-b border-[#E2E8F0] text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              <th className="py-2.5 px-3.5">Descripción</th>
+                              <th className="py-2.5 px-2.5">Cant.</th>
+                              <th className="py-2.5 px-2.5">Unitario</th>
+                              <th className="py-2.5 px-2.5">Subtotal</th>
+                              <th className="py-2.5 px-2.5">Estado (Clic)</th>
+                              <th className="py-2.5 px-2.5 text-center">
+                                Acción
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#E2E8F0] text-xs">
+                            {activeVehicle.parts.map((item) => {
+                              const rowTotal = item.quantity * item.unitPrice;
+                              const isInstalled = item.status === "Instalado";
+                              return (
+                                <tr
+                                  key={item.id}
+                                  className="hover:bg-[#F8FAFC]"
+                                >
+                                  <td className="py-2.5 px-3.5 font-bold text-[#0F172A]">
+                                    {item.description}
+                                  </td>
+                                  <td className="py-2.5 px-2.5 text-slate-600 font-medium">
+                                    {item.quantity} {item.unit}
+                                  </td>
+                                  <td className="py-2.5 px-2.5 text-slate-600 font-medium">
+                                    {formatARS(item.unitPrice)}
+                                  </td>
+                                  <td className="py-2.5 px-2.5 font-extrabold text-[#0F172A]">
+                                    {formatARS(rowTotal)}
+                                  </td>
+                                  <td className="py-2.5 px-2.5">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleTogglePartStatus(item.id)
+                                      }
+                                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold cursor-pointer ${
+                                        isInstalled
+                                          ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
+                                          : "bg-[#F8FAFC] text-[#3B82F6] border border-[#CBD5E1]"
+                                      }`}
+                                    >
+                                      <span
+                                        className={`w-1.5 h-1.5 rounded-full ${
+                                          isInstalled
+                                            ? "bg-[#1D4ED8]"
+                                            : "bg-[#60A5FA]"
+                                        }`}
+                                      />
+                                      {item.status}
+                                    </button>
+                                  </td>
+                                  <td className="py-2.5 px-2.5 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleDeletePart(item.id)
+                                      }
+                                      className="p-1 text-slate-400 hover:text-[#1D4ED8] hover:bg-[#EFF6FF] rounded-lg cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ================= TAB 5: 5. BITÁCORA DEL MECÁNICO ================= */}
+                  {openAccordion === 5 && (
+                    <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 sm:p-5 lg:overflow-hidden">
+                      {/* Columna Izquierda (5 cols en lg): Redacción de Notas Técnicas y Evidencia */}
+                      <div className="lg:col-span-5 flex flex-col justify-between gap-3 bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
+                        <form
+                          onSubmit={handleAddMechanicNote}
+                          className="flex flex-col gap-2.5 flex-1"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-extrabold text-[#0F172A]">
+                              Nueva Observación Técnica
+                            </span>
+                            <span className="text-[10px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded border border-blue-200">
+                              Sincroniza con QR
+                            </span>
+                          </div>
+
+                          <textarea
+                            rows={3}
+                            value={mechanicNoteInput}
+                            onChange={(e) =>
+                              setMechanicNoteInput(e.target.value)
+                            }
+                            placeholder="Redactar informe técnico de bahía, mediciones de diagnóstico o novedades para el cliente..."
+                            className="w-full flex-1 min-h-[76px] p-3 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] resize-none"
+                          />
+
+                          {/* Etiquetas rápidas de inserción */}
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              "Torque verificado según manual",
+                              "Prueba dinámica en ruta aprobada",
+                              "Reemplazo de pieza completado",
+                            ].map((preset) => (
+                              <button
+                                key={preset}
+                                type="button"
+                                onClick={() => setMechanicNoteInput(preset)}
+                                className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-white hover:bg-[#EFF6FF] text-slate-600 hover:text-[#1D4ED8] border border-[#E2E8F0] cursor-pointer transition-colors"
+                              >
+                                + {preset}
+                              </button>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-1">
+                            <button
+                              type="submit"
+                              className="flex-1 py-2 px-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer shadow-2xs"
+                            >
+                              Registrar en Bitácora
                             </button>
                             <button
                               type="button"
                               onClick={() =>
                                 triggerToast(
-                                  `Presupuesto Digital enviado a ${activeVehicle.ownerName}`,
-                                  `Total: ${formatARS(
-                                    totalBudget
-                                  )} · Link de aprobación QR activo.`,
-                                  "whatsapp"
+                                  "Evidencia fotográfica actualizada",
+                                  `Sincronizada en BoxBox QR para ${activeVehicle.ownerName}.`,
+                                  "info"
                                 )
                               }
-                              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer"
+                              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200 text-xs font-bold cursor-pointer shrink-0"
                             >
-                              <Send className="w-3.5 h-3.5" />
-                              <span>Enviar Presupuesto Digital</span>
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>Subir Foto</span>
                             </button>
                           </div>
-                        </div>
+                        </form>
                       </div>
-                    )}
 
-                    {/* ================= TAB 3: 3. INVENTARIO Y REPUESTOS ================= */}
-                    {openAccordion === 3 && (
-                      <div className="flex-1 lg:min-h-0 flex flex-col justify-between p-4 sm:p-5 gap-3.5 lg:overflow-hidden">
-                        {/* Selector Rápido desde Pañol + Formulario Inline */}
-                        <div className="space-y-2.5 shrink-0">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-extrabold text-[#0F172A]">
-                                Asignación Rápida de Stock del Pañol:
-                              </span>
-                              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-                                {inventory.slice(0, 4).map((inv) => (
-                                  <button
-                                    key={inv.id}
-                                    type="button"
-                                    disabled={inv.stock <= 0}
-                                    onClick={() =>
-                                      handleAssignFromInventory(inv)
-                                    }
-                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#EFF6FF] hover:bg-[#2563EB] text-[#1D4ED8] hover:text-white border border-blue-200 text-[11px] font-bold transition-colors cursor-pointer whitespace-nowrap disabled:opacity-40"
-                                    title={`Sumar ${inv.name} (${formatARS(
-                                      inv.unitPrice
-                                    )})`}
-                                  >
-                                    <Plus className="w-3 h-3" />
-                                    <span>{inv.name.split(" ").slice(0, 2).join(" ")}</span>
-                                    <span className="opacity-75">
-                                      ({inv.stock})
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                            <span className="text-[11px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-2.5 py-1 rounded-full border border-blue-200">
-                              {financialSummary.installedCount} Instalados ·{" "}
-                              {financialSummary.inProgressCount} En progreso
-                            </span>
-                          </div>
-
-                          {/* Fast Inline Add Part Bar */}
-                          <form
-                            onSubmit={handleAddPartSubmit}
-                            className="p-2.5 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-12 gap-2 items-center"
-                          >
-                            <div className="col-span-12 sm:col-span-4">
-                              <input
-                                type="text"
-                                required
-                                value={newDesc}
-                                onChange={(e) => setNewDesc(e.target.value)}
-                                placeholder="+ Agregar repuesto o mano de obra..."
-                                className="w-full px-3 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB]"
-                              />
-                            </div>
-                            <div className="col-span-4 sm:col-span-2">
-                              <select
-                                value={newCategory}
-                                onChange={(e) =>
-                                  setNewCategory(
-                                    e.target.value as
-                                      | "Repuesto"
-                                      | "Mano de Obra"
-                                  )
-                                }
-                                className="w-full px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
-                              >
-                                <option value="Repuesto">Repuesto</option>
-                                <option value="Mano de Obra">
-                                  Mano de Obra
-                                </option>
-                              </select>
-                            </div>
-                            <div className="col-span-4 sm:col-span-2 flex gap-1">
-                              <input
-                                type="number"
-                                min={1}
-                                required
-                                value={newQty}
-                                onChange={(e) => setNewQty(e.target.value)}
-                                className="w-12 px-2 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
-                              />
-                              <select
-                                value={newUnit}
-                                onChange={(e) => setNewUnit(e.target.value)}
-                                className="flex-1 px-1 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
-                              >
-                                <option value="u.">u.</option>
-                                <option value="hrs">hrs</option>
-                                <option value="L">L</option>
-                              </select>
-                            </div>
-                            <div className="col-span-4 sm:col-span-2">
-                              <input
-                                type="number"
-                                min={1}
-                                required
-                                value={newPrice}
-                                onChange={(e) => setNewPrice(e.target.value)}
-                                placeholder="Precio ($)"
-                                className="w-full px-2.5 py-1.5 bg-white border border-[#E2E8F0] rounded-lg text-xs text-[#0F172A]"
-                              />
-                            </div>
-                            <div className="col-span-12 sm:col-span-2">
-                              <button
-                                type="submit"
-                                className="w-full py-1.5 px-3 bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1 cursor-pointer"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                                <span>Sumar Ítem</span>
-                              </button>
-                            </div>
-                          </form>
+                      {/* Columna Derecha (7 cols en lg): Línea de Tiempo Completa */}
+                      <div className="lg:col-span-7 flex flex-col min-h-0">
+                        <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#E2E8F0] shrink-0">
+                          <span className="text-xs font-extrabold text-[#0F172A]">
+                            Historial Cronológico de la Orden (
+                            {activeVehicle.timeline.length} eventos)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            Últ. registro: {latestEvent?.time}
+                          </span>
                         </div>
 
-                        {/* Interactive Parts Table with Horizontal & Vertical Scroll */}
-                        <div className="overflow-x-auto lg:overflow-y-auto w-full flex-1 lg:min-h-0 border border-[#E2E8F0] rounded-xl">
-                          <table className="w-full min-w-[540px] text-left border-collapse">
-                            <thead className="sticky top-0 bg-[#F8FAFC] z-10">
-                              <tr className="border-b border-[#E2E8F0] text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                <th className="py-2.5 px-3.5">Descripción</th>
-                                <th className="py-2.5 px-2.5">Cant.</th>
-                                <th className="py-2.5 px-2.5">Unitario</th>
-                                <th className="py-2.5 px-2.5">Subtotal</th>
-                                <th className="py-2.5 px-2.5">Estado (Clic)</th>
-                                <th className="py-2.5 px-2.5 text-center">
-                                  Acción
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#E2E8F0] text-xs">
-                              {activeVehicle.parts.map((item) => {
-                                const rowTotal = item.quantity * item.unitPrice;
-                                const isInstalled = item.status === "Instalado";
-                                return (
-                                  <tr
-                                    key={item.id}
-                                    className="hover:bg-[#F8FAFC]"
-                                  >
-                                    <td className="py-2.5 px-3.5 font-bold text-[#0F172A]">
-                                      {item.description}
-                                    </td>
-                                    <td className="py-2.5 px-2.5 text-slate-600 font-medium">
-                                      {item.quantity} {item.unit}
-                                    </td>
-                                    <td className="py-2.5 px-2.5 text-slate-600 font-medium">
-                                      {formatARS(item.unitPrice)}
-                                    </td>
-                                    <td className="py-2.5 px-2.5 font-extrabold text-[#0F172A]">
-                                      {formatARS(rowTotal)}
-                                    </td>
-                                    <td className="py-2.5 px-2.5">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleTogglePartStatus(item.id)
-                                        }
-                                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold cursor-pointer ${
-                                          isInstalled
-                                            ? "bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200"
-                                            : "bg-[#F8FAFC] text-[#3B82F6] border border-[#CBD5E1]"
-                                        }`}
-                                      >
-                                        <span
-                                          className={`w-1.5 h-1.5 rounded-full ${
-                                            isInstalled
-                                              ? "bg-[#1D4ED8]"
-                                              : "bg-[#60A5FA]"
-                                          }`}
-                                        />
-                                        {item.status}
-                                      </button>
-                                    </td>
-                                    <td className="py-2.5 px-2.5 text-center">
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          handleDeletePart(item.id)
-                                        }
-                                        className="p-1 text-slate-400 hover:text-[#1D4ED8] hover:bg-[#EFF6FF] rounded-lg cursor-pointer"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* ================= TAB 4: 4. BITÁCORA DEL MECÁNICO ================= */}
-                    {openAccordion === 4 && (
-                      <div className="flex-1 lg:min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 sm:p-5 lg:overflow-hidden">
-                        {/* Columna Izquierda (5 cols en lg): Redacción de Notas Técnicas y Evidencia */}
-                        <div className="lg:col-span-5 flex flex-col justify-between gap-3 bg-[#F8FAFC] p-4 rounded-2xl border border-[#E2E8F0]">
-                          <form
-                            onSubmit={handleAddMechanicNote}
-                            className="flex flex-col gap-2.5 flex-1"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-extrabold text-[#0F172A]">
-                                Nueva Observación Técnica
-                              </span>
-                              <span className="text-[10px] font-bold text-[#1D4ED8] bg-[#EFF6FF] px-2 py-0.5 rounded border border-blue-200">
-                                Sincroniza con QR
-                              </span>
-                            </div>
-
-                            <textarea
-                              rows={3}
-                              value={mechanicNoteInput}
-                              onChange={(e) =>
-                                setMechanicNoteInput(e.target.value)
-                              }
-                              placeholder="Redactar informe técnico de bahía, mediciones de diagnóstico o novedades para el cliente..."
-                              className="w-full flex-1 min-h-[76px] p-3 bg-white border border-[#E2E8F0] rounded-xl text-xs text-[#0F172A] focus:outline-none focus:border-[#2563EB] resize-none"
-                            />
-
-                            {/* Etiquetas rápidas de inserción */}
-                            <div className="flex flex-wrap gap-1.5">
-                              {[
-                                "Torque verificado según manual",
-                                "Prueba dinámica en ruta aprobada",
-                                "Reemplazo de pieza completado",
-                              ].map((preset) => (
-                                <button
-                                  key={preset}
-                                  type="button"
-                                  onClick={() => setMechanicNoteInput(preset)}
-                                  className="text-[10px] font-semibold px-2 py-1 rounded-lg bg-white hover:bg-[#EFF6FF] text-slate-600 hover:text-[#1D4ED8] border border-[#E2E8F0] cursor-pointer transition-colors"
-                                >
-                                  + {preset}
-                                </button>
-                              ))}
-                            </div>
-
-                            <div className="flex items-center gap-2 pt-1">
-                              <button
-                                type="submit"
-                                className="flex-1 py-2 px-3.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer shadow-2xs"
-                              >
-                                Registrar en Bitácora
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  triggerToast(
-                                    "Evidencia fotográfica actualizada",
-                                    `Sincronizada en BoxBox QR para ${activeVehicle.ownerName}.`,
-                                    "info"
-                                  )
-                                }
-                                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200 text-xs font-bold cursor-pointer shrink-0"
-                              >
-                                <Camera className="w-3.5 h-3.5" />
-                                <span>Subir Foto</span>
-                              </button>
-                            </div>
-                          </form>
-                        </div>
-
-                        {/* Columna Derecha (7 cols en lg): Línea de Tiempo Completa */}
-                        <div className="lg:col-span-7 flex flex-col lg:min-h-0">
-                          <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-[#E2E8F0] shrink-0">
-                            <span className="text-xs font-extrabold text-[#0F172A]">
-                              Historial Cronológico de la Orden (
-                              {activeVehicle.timeline.length} eventos)
-                            </span>
-                            <span className="text-[11px] font-semibold text-slate-500">
-                              Últ. registro: {latestEvent?.time}
-                            </span>
-                          </div>
-
-                          <div className="space-y-2.5 lg:overflow-y-auto pr-1 flex-1 lg:min-h-0">
-                            {activeVehicle.timeline.map((item, idx) => (
-                              <div
-                                key={item.id}
-                                className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs ${
-                                  idx === 0
-                                    ? "bg-[#EFF6FF]/60 border-blue-200"
-                                    : "bg-[#F8FAFC] border-[#E2E8F0]"
-                                }`}
-                              >
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0">
-                                    <Check className="w-3 h-3 stroke-[3]" />
-                                  </span>
-                                  <span className="font-mono font-extrabold text-[#1D4ED8] shrink-0">
-                                    {item.time}
-                                  </span>
-                                  <span className="font-semibold text-[#0F172A] break-words">
-                                    {item.text}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-[#E2E8F0] shrink-0 ml-auto">
-                                  {item.actor}
+                        <div className="space-y-2.5 lg:overflow-y-auto pr-1 flex-1 min-h-0">
+                          {activeVehicle.timeline.map((item, idx) => (
+                            <div
+                              key={item.id}
+                              className={`p-3 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs ${
+                                idx === 0
+                                  ? "bg-[#EFF6FF]/60 border-blue-200"
+                                  : "bg-[#F8FAFC] border-[#E2E8F0]"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="w-5 h-5 rounded-full bg-[#2563EB] text-white flex items-center justify-center shrink-0">
+                                  <Check className="w-3 h-3 stroke-[3]" />
+                                </span>
+                                <span className="font-mono font-extrabold text-[#1D4ED8] shrink-0">
+                                  {item.time}
+                                </span>
+                                <span className="font-semibold text-[#0F172A] break-words">
+                                  {item.text}
                                 </span>
                               </div>
-                            ))}
-                          </div>
+                              <span className="text-[10px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-[#E2E8F0] shrink-0 ml-auto">
+                                {item.actor}
+                              </span>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                    )}
-                  </div>
-                </section>
-              </>
+                    </div>
+                  )}
+                </div>
+              </section>
             )}
 
             {/* =====================================================================
@@ -3174,10 +3308,10 @@ export default function MecaniQDashboard() {
                 <em>Órdenes de Trabajo</em>.
               </li>
               <li>
-                • <strong>Barra de Pestañas tipo Navegador (4 Tabs):</strong>{" "}
-                Alterna instantáneamente entre <em>1. Estado &amp; Telemetría</em>,{" "}
-                <em>2. Presupuesto y Costos</em>, <em>3. Inventario y Repuestos</em>{" "}
-                y <em>4. Bitácora del Mecánico</em> a pantalla completa.
+                • <strong>Barra de 5 Pestañas tipo Navegador:</strong>{" "}
+                Alterna sin scroll vertical entre <em>1. Ficha Técnica &amp; QR</em>,{" "}
+                <em>2. Estado &amp; Telemetría</em>, <em>3. Presupuesto y Costos</em>,{" "}
+                <em>4. Inventario y Repuestos</em> y <em>5. Bitácora del Mecánico</em>.
               </li>
             </ul>
             <button
