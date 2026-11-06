@@ -79,6 +79,20 @@ export interface TimelineEvent {
   completed: boolean;
 }
 
+export interface HistoricalServiceRecord {
+  id: string;
+  date: string;
+  orderNumber: string;
+  mileage: string;
+  serviceTitle: string;
+  diagnosisSummary: string;
+  installedParts: string[];
+  mechanic: string;
+  totalBilled: number;
+  warrantyLabel: string;
+  isCurrentOrder?: boolean;
+}
+
 export interface VehicleOrder {
   id: string;
   bayNumber: string;
@@ -93,6 +107,11 @@ export interface VehicleOrder {
   checkInTime: string;
   ownerName: string;
   ownerFirstName: string;
+  ownerDni: string;
+  clientSince: string;
+  vin: string;
+  nextRecommendedService: string;
+  fleetPlates: { plate: string; label: string }[];
   phone: string;
   email: string;
   lastVisit: string;
@@ -105,6 +124,7 @@ export interface VehicleOrder {
   photoCaption: string;
   parts: PartItem[];
   timeline: TimelineEvent[];
+  serviceHistory: HistoricalServiceRecord[];
 }
 
 export interface InventoryStockItem {
@@ -157,7 +177,7 @@ export const STAGES: StageInfo[] = [
   },
 ];
 
-export const STORAGE_KEY_VEHICLES = "boxbox_vehicles_v1";
+export const STORAGE_KEY_VEHICLES = "boxbox_vehicles_v2";
 
 export const INITIAL_VEHICLES: VehicleOrder[] = [
   {
@@ -174,6 +194,15 @@ export const INITIAL_VEHICLES: VehicleOrder[] = [
     checkInTime: "08:15 hs",
     ownerName: "Luis Pérez",
     ownerFirstName: "LUIS",
+    ownerDni: "34.812.904",
+    clientSince: "Cliente desde 2022",
+    vin: "8AFZZZFFCHJ409218",
+    nextRecommendedService:
+      "Próximo cambio de aceite sintético y filtros a los 78.400 km (o Nov 2027)",
+    fleetPlates: [
+      { plate: "AE 123 CD", label: "AE 123 CD · Ford Focus" },
+      { plate: "AC 908 KL", label: "AC 908 KL · Ford Ranger (Flota)" },
+    ],
     phone: "(116) 656 1670",
     email: "luisperez@gmail.com",
     lastVisit: "05 Nov 2026",
@@ -237,6 +266,77 @@ export const INITIAL_VEHICLES: VehicleOrder[] = [
         completed: false,
       },
     ],
+    serviceHistory: [
+      {
+        id: "fh-1",
+        date: "05 Nov 2026",
+        orderNumber: "#OT-2026-104 (En Curso)",
+        mileage: "68.400 km",
+        serviceTitle: "Reemplazo de Kit de Embrague Completo y Transmisión",
+        diagnosisSummary:
+          "Desmontaje de caja MTX-75, reemplazo de placa, disco y crapodina hidráulica LUK + fluido sintético 75W-90.",
+        installedParts: [
+          "Kit Embrague LUK 2.0 Duratec",
+          "Aceite Transmisión 75W-90 (2L)",
+          "Retén Bancada Trasero",
+        ],
+        mechanic: "Carlos García (Jefe de Taller)",
+        totalBilled: 285000,
+        warrantyLabel: "Garantía BoxBox En Curso · 12 Meses / 20.000 km",
+        isCurrentOrder: true,
+      },
+      {
+        id: "fh-2",
+        date: "15 Jul 2026",
+        orderNumber: "#OT-2026-061",
+        mileage: "60.120 km",
+        serviceTitle: "Service Oficial 60.000 km + Frenos Delanteros",
+        diagnosisSummary:
+          "Mantenimiento programado de 60k, cambio de lubricante sintético 5W-30, 4 filtros y pastillas cerámicas delanteras.",
+        installedParts: [
+          "Aceite Sintético 5W-30 (5L)",
+          "Kit 4 Filtros Motorcraft",
+          "Pastillas de Freno Bosch",
+        ],
+        mechanic: "Carlos García",
+        totalBilled: 214000,
+        warrantyLabel: "Garantía Vigente · Certificada por BoxBox",
+      },
+      {
+        id: "fh-3",
+        date: "10 Ene 2026",
+        orderNumber: "#OT-2026-012",
+        mileage: "51.800 km",
+        serviceTitle: "Diagnóstico Electrónico de Inyección y Cuerpo Mariposa",
+        diagnosisSummary:
+          "Limpieza por ultrasonido de inyectores GDI, recalibración electrónica de cuerpo mariposa y bujías Iridium.",
+        installedParts: [
+          "Juego 4 Bujías NGK Iridium",
+          "Junta Cuerpo Mariposa",
+          "Telemetría OBD-II",
+        ],
+        mechanic: "Martín Sosa (Electrónica)",
+        totalBilled: 142000,
+        warrantyLabel: "Garantía Certificada por BoxBox",
+      },
+      {
+        id: "fh-4",
+        date: "04 Ago 2025",
+        orderNumber: "#OT-2025-198",
+        mileage: "42.300 km",
+        serviceTitle: "Service 40.000 km + Alineación 3D y Tren Delantero",
+        diagnosisSummary:
+          "Cambio de aceite y filtros, reemplazo de bieletas de barra estabilizadora y alineación computarizada 3D.",
+        installedParts: [
+          "Par Bieletas Suspensión",
+          "Aceite Sintético 5W-30",
+          "Filtro Aire y Habitáculo",
+        ],
+        mechanic: "Carlos García",
+        totalBilled: 168000,
+        warrantyLabel: "Historial Auditado BoxBox QR",
+      },
+    ],
   },
   {
     id: "gol-aa456zz",
@@ -252,6 +352,12 @@ export const INITIAL_VEHICLES: VehicleOrder[] = [
     checkInTime: "08:30 hs",
     ownerName: "María Gómez",
     ownerFirstName: "MARÍA",
+    ownerDni: "38.204.519",
+    clientSince: "Cliente desde 2023",
+    vin: "9BWAB45U7KP083412",
+    nextRecommendedService:
+      "Próximo control de correa Poly-V y service 100k a los 104.000 km",
+    fleetPlates: [{ plate: "AA 456 ZZ", label: "AA 456 ZZ · VW Gol Trend" }],
     phone: "(114) 892 3310",
     email: "mariagomez@gmail.com",
     lastVisit: "05 Nov 2026",
@@ -315,6 +421,60 @@ export const INITIAL_VEHICLES: VehicleOrder[] = [
         completed: false,
       },
     ],
+    serviceHistory: [
+      {
+        id: "gh-1",
+        date: "05 Nov 2026",
+        orderNumber: "#OT-2026-108 (En Curso)",
+        mileage: "94.120 km",
+        serviceTitle: "Servicio de Frenos ABS y Tren Delantero",
+        diagnosisSummary:
+          "Reemplazo de pastillas delanteras Bosch, rectificación de discos ventilados y calibración de sensores de rueda ABS.",
+        installedParts: [
+          "Juego Pastillas Bosch",
+          "Rectificación Discos x2",
+          "Líquido de Frenos DOT-4",
+        ],
+        mechanic: "Carlos García",
+        totalBilled: 147000,
+        warrantyLabel: "Garantía BoxBox En Curso · 12 Meses",
+        isCurrentOrder: true,
+      },
+      {
+        id: "gh-2",
+        date: "22 May 2026",
+        orderNumber: "#OT-2026-044",
+        mileage: "85.400 km",
+        serviceTitle: "Cambio de Kit de Distribución y Bomba de Agua",
+        diagnosisSummary:
+          "Reemplazo preventivo de correa dentada INA, tensor mecánico, bomba de agua aluminio y refrigerante G13.",
+        installedParts: [
+          "Kit Distribución INA 1.6 MSI",
+          "Bomba de Agua Dolz",
+          "Refrigerante Orgánico G13",
+        ],
+        mechanic: "Carlos García",
+        totalBilled: 265000,
+        warrantyLabel: "Garantía Vigente · Certificada por BoxBox",
+      },
+      {
+        id: "gh-3",
+        date: "14 Nov 2025",
+        orderNumber: "#OT-2025-230",
+        mileage: "76.200 km",
+        serviceTitle: "Service Completo 75.000 km + Batería 12V",
+        diagnosisSummary:
+          "Cambio de aceite sintético Helix HX8 5W-40, filtros completos y reemplazo de batería Moura 12x65.",
+        installedParts: [
+          "Batería Moura 12x65",
+          "Aceite Sintético 5W-40 (4L)",
+          "Filtro Aceite, Aire y Nafta",
+        ],
+        mechanic: "Martín Sosa",
+        totalBilled: 238000,
+        warrantyLabel: "Garantía Vigente · Certificada por BoxBox",
+      },
+    ],
   },
   {
     id: "hilux-af890xy",
@@ -330,6 +490,15 @@ export const INITIAL_VEHICLES: VehicleOrder[] = [
     checkInTime: "08:00 hs",
     ownerName: "Roberto Díaz",
     ownerFirstName: "ROBERTO",
+    ownerDni: "26.540.118",
+    clientSince: "Cliente Corporativo desde 2021",
+    vin: "8AJBA3CD9N1602890",
+    nextRecommendedService:
+      "Próximo Service 60.000 km + engrase de cardán 4x4 a los 60.200 km",
+    fleetPlates: [
+      { plate: "AF 890 XY", label: "AF 890 XY · Toyota Hilux SRX" },
+      { plate: "AE 510 TR", label: "AE 510 TR · Toyota Hilux DX (Flota Agro)" },
+    ],
     phone: "(115) 421 9088",
     email: "rdiaz@agro.com.ar",
     lastVisit: "05 Nov 2026",
@@ -391,6 +560,77 @@ export const INITIAL_VEHICLES: VehicleOrder[] = [
         actor: "Recepción Taller",
         text: "Vehículo ingresado en Bahía 03 y etiqueta BoxBox QR emitida",
         completed: false,
+      },
+    ],
+    serviceHistory: [
+      {
+        id: "hh-1",
+        date: "05 Nov 2026",
+        orderNumber: "#OT-2026-112 (Control Final)",
+        mileage: "50.200 km",
+        serviceTitle: "Kit de Distribución Original + Service 50.000 km 4x4",
+        diagnosisSummary:
+          "Instalación de Kit de Distribución genuino Toyota, cambio de 8L de aceite sintético DPF 5W-30 y filtros de gasoil.",
+        installedParts: [
+          "Kit Distribución Original Toyota",
+          "Aceite Sintético 5W-30 DPF (8L)",
+          "Filtro Combustible Primario y Secundario",
+        ],
+        mechanic: "Carlos García (Jefe de Taller)",
+        totalBilled: 477000,
+        warrantyLabel: "Garantía Oficial BoxBox · 24 Meses / 50.000 km",
+        isCurrentOrder: true,
+      },
+      {
+        id: "hh-2",
+        date: "19 Jun 2026",
+        orderNumber: "#OT-2026-052",
+        mileage: "40.050 km",
+        serviceTitle: "Service Pesado 40.000 km + Aceite de Diferenciales 4x4",
+        diagnosisSummary:
+          "Reemplazo de fluido de diferencial delantero y trasero LSD 75W-85, lubricación de crucetas y service de motor.",
+        installedParts: [
+          "Aceite Diferencial LSD 75W-85 (5L)",
+          "Aceite Motor 5W-30 (8L)",
+          "Filtro de Aire Heavy Duty",
+        ],
+        mechanic: "Carlos García",
+        totalBilled: 342000,
+        warrantyLabel: "Garantía Vigente · Certificada por BoxBox",
+      },
+      {
+        id: "hh-3",
+        date: "08 Feb 2026",
+        orderNumber: "#OT-2026-019",
+        mileage: "30.180 km",
+        serviceTitle: "Service 30.000 km + Pastillas Delanteras Heavy Duty",
+        diagnosisSummary:
+          "Cambio de pastillas de freno para uso rural severo, limpieza de sensores ABS y regeneración de filtro DPF.",
+        installedParts: [
+          "Pastillas Freno Toyota Original",
+          "Kit Filtros Toyota 2.8 TDI",
+          "Regeneración Electrónica DPF",
+        ],
+        mechanic: "Martín Sosa",
+        totalBilled: 289000,
+        warrantyLabel: "Garantía Vigente · Certificada por BoxBox",
+      },
+      {
+        id: "hh-4",
+        date: "12 Sep 2025",
+        orderNumber: "#OT-2025-211",
+        mileage: "20.040 km",
+        serviceTitle: "Service Oficial 20.000 km y Revisión de Suspensión",
+        diagnosisSummary:
+          "Mantenimiento programado de 20k, torqueado de elásticos traseros y rotación/balanceo de cubiertas All-Terrain.",
+        installedParts: [
+          "Aceite Sintético 5W-30 (8L)",
+          "Filtro Habitáculo Carbón Activo",
+          "Balanceo 4 Ruedas",
+        ],
+        mechanic: "Carlos García",
+        totalBilled: 215000,
+        warrantyLabel: "Historial Auditado BoxBox QR",
       },
     ],
   },
@@ -721,6 +961,17 @@ export default function MecaniQDashboard() {
   const [isClientDrawerOpen, setIsClientDrawerOpen] = useState<boolean>(false);
   const [isDrawerPinned, setIsDrawerPinned] = useState<boolean>(true);
   const [showBudgetInPhone, setShowBudgetInPhone] = useState<boolean>(false);
+  const [phoneSimulatorTab, setPhoneSimulatorTab] = useState<
+    "vivo" | "historial"
+  >("vivo");
+
+  // Client Directory & Clinical History states
+  const [clientDirectoryQuery, setClientDirectoryQuery] = useState<string>("");
+  const [showAddHistoryForm, setShowAddHistoryForm] = useState<boolean>(false);
+  const [histMileage, setHistMileage] = useState<string>("");
+  const [histTitle, setHistTitle] = useState<string>("");
+  const [histParts, setHistParts] = useState<string>("");
+  const [histCost, setHistCost] = useState<string>("");
 
   // Modals & Popovers
   const [showQrStickerModal, setShowQrStickerModal] = useState<boolean>(false);
@@ -808,6 +1059,84 @@ export default function MecaniQDashboard() {
   );
   const activeClientPath = `/client/${activePlateSlug}`;
   const dynamicClientUrl = `${origin}${activeClientPath}`;
+  const activeClientHistoryPath = `/client/${activePlateSlug}?view=historial`;
+  const dynamicClientHistoryUrl = `${origin}${activeClientHistoryPath}`;
+
+  // Filtered Clients Directory for "Clientes" Master-Detail view
+  const filteredClientDirectory = useMemo(() => {
+    if (!clientDirectoryQuery.trim()) return vehicles;
+    const q = clientDirectoryQuery.toLowerCase();
+    return vehicles.filter(
+      (v) =>
+        v.ownerName.toLowerCase().includes(q) ||
+        (v.ownerDni || "").toLowerCase().includes(q) ||
+        v.phone.toLowerCase().includes(q) ||
+        v.plate.toLowerCase().includes(q) ||
+        v.model.toLowerCase().includes(q) ||
+        (v.fleetPlates || []).some((fp) => fp.label.toLowerCase().includes(q))
+    );
+  }, [vehicles, clientDirectoryQuery]);
+
+  const handleCopyHistoryUrl = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(dynamicClientHistoryUrl).catch(() => {});
+    }
+    triggerToast(
+      "Link de Historial Clínico copiado",
+      dynamicClientHistoryUrl,
+      "info"
+    );
+  };
+
+  const handleAddHistoricalService = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!histTitle.trim()) return;
+    const costNum = Math.max(0, Number(histCost) || 95000);
+    const partsArr = histParts
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const newRecord: HistoricalServiceRecord = {
+      id: `hist-${Date.now()}`,
+      date: "05 Nov 2026",
+      orderNumber: `#OT-2026-${Math.floor(120 + Math.random() * 80)}`,
+      mileage: histMileage.trim() || activeVehicle.mileage,
+      serviceTitle: histTitle.trim(),
+      diagnosisSummary:
+        "Mantenimiento preventivo y control clínico certificado en estación BoxBox PRO.",
+      installedParts:
+        partsArr.length > 0
+          ? partsArr
+          : ["Inspección Multimarca BoxBox", "Insumos Certificados"],
+      mechanic: "Carlos García (Jefe de Taller)",
+      totalBilled: costNum,
+      warrantyLabel: "Garantía Vigente · Certificada por BoxBox",
+    };
+
+    setVehicles((prev) =>
+      prev.map((v) =>
+        v.id === activeVehicle.id
+          ? {
+              ...v,
+              historicalServices: v.historicalServices + 1,
+              serviceHistory: [newRecord, ...(v.serviceHistory || [])],
+            }
+          : v
+      )
+    );
+
+    setHistMileage("");
+    setHistTitle("");
+    setHistParts("");
+    setHistCost("");
+    setShowAddHistoryForm(false);
+    triggerToast(
+      "Mantenimiento histórico registrado",
+      `${newRecord.serviceTitle} (${newRecord.mileage}) incorporado al Pasaporte QR.`,
+      "success"
+    );
+  };
 
   // Financial breakdown calculations
   const financialSummary = useMemo(() => {
@@ -2937,72 +3266,482 @@ export default function MecaniQDashboard() {
             )}
 
             {/* =====================================================================
-                VISTA 4: CLIENTES (HISTORIAL CLÍNICO VEHICULAR RESPONSIVE)
+                VISTA 4: CLIENTES (MAESTRO-DETALLE · PASAPORTE QR & TRAZADO HISTÓRICO)
                ===================================================================== */}
             {activeTab === "Clientes" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1 lg:min-h-0 lg:overflow-y-auto items-start">
-                {vehicles.map((v) => {
-                  const st = STAGES[v.stageIndex];
-                  const budget = v.parts.reduce(
-                    (sum, p) => sum + p.quantity * p.unitPrice,
-                    0
-                  );
-                  return (
-                    <div
-                      key={v.id}
-                      className="bg-white rounded-2xl border border-[#E2E8F0] shadow-2xs p-5 flex flex-col justify-between gap-4"
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="text-base font-extrabold text-[#0F172A]">
-                              {v.ownerName}
-                            </h3>
-                            <p className="text-xs text-slate-500">{v.email}</p>
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-0 overflow-hidden">
+                {/* COLUMNA IZQUIERDA (4 COLUMNAS - DIRECTORIO DE CLIENTES Y FLOTA) */}
+                <div className="lg:col-span-4 bg-white rounded-2xl border border-[#E2E8F0] shadow-xs p-3.5 flex flex-col min-h-0 overflow-hidden">
+                  <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-[#E2E8F0] shrink-0">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563EB] block">
+                        Directorio de Clientes y Flota
+                      </span>
+                      <h3 className="text-sm font-black text-[#0F172A]">
+                        Legajos y Vehículos Asociados
+                      </h3>
+                    </div>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                      {filteredClientDirectory.length} clientes
+                    </span>
+                  </div>
+
+                  {/* Buscador superior del Directorio */}
+                  <div className="relative my-2.5 shrink-0">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={clientDirectoryQuery}
+                      onChange={(e) => setClientDirectoryQuery(e.target.value)}
+                      placeholder="Buscar por cliente, DNI, teléfono o patente..."
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:border-[#2563EB] focus:bg-white transition-all"
+                    />
+                  </div>
+
+                  {/* Lista interactiva de clientes con scroll interno limpio */}
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2.5">
+                    {filteredClientDirectory.map((clientVeh) => {
+                      const isSelected = clientVeh.id === activeVehicle.id;
+                      const historyRecords = clientVeh.serviceHistory || [];
+                      const accumulatedSpend = historyRecords.reduce(
+                        (acc, r) => acc + r.totalBilled,
+                        0
+                      );
+                      const fleetList =
+                        clientVeh.fleetPlates &&
+                        clientVeh.fleetPlates.length > 0
+                          ? clientVeh.fleetPlates
+                          : [
+                              {
+                                plate: clientVeh.plate,
+                                label: `${clientVeh.plate} · ${clientVeh.model}`,
+                              },
+                            ];
+
+                      return (
+                        <div
+                          key={clientVeh.id}
+                          onClick={() => setSelectedVehicleId(clientVeh.id)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setSelectedVehicleId(clientVeh.id);
+                            }
+                          }}
+                          className={`p-3 rounded-xl border transition-all cursor-pointer text-left ${
+                            isSelected
+                              ? "bg-[#EFF6FF]/90 border-2 border-[#2563EB] shadow-xs"
+                              : "bg-[#F8FAFC] hover:bg-white border-[#E2E8F0] hover:border-blue-300"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <h4 className="text-sm font-extrabold text-[#0F172A] truncate">
+                                  {clientVeh.ownerName}
+                                </h4>
+                                {isSelected && (
+                                  <span className="w-2 h-2 rounded-full bg-[#2563EB] shrink-0" />
+                                )}
+                              </div>
+                              <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                                DNI {clientVeh.ownerDni || "34.812.904"} ·{" "}
+                                {clientVeh.phone}
+                              </p>
+                            </div>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-[#1D4ED8] border border-blue-200 shrink-0">
+                              {clientVeh.clientSince || "Cliente desde 2022"}
+                            </span>
                           </div>
-                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
-                            {v.historicalServices} visitas
-                          </span>
+
+                          {/* Píldoras con las Patentes Mercosur de sus vehículos registrados */}
+                          <div className="mt-2.5 flex flex-wrap gap-1.5">
+                            {fleetList.map((fp) => {
+                              const isPrimaryPlate =
+                                fp.plate === clientVeh.plate;
+                              return (
+                                <button
+                                  key={fp.plate}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedVehicleId(clientVeh.id);
+                                  }}
+                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-extrabold border transition-colors cursor-pointer ${
+                                    isSelected && isPrimaryPlate
+                                      ? "bg-[#2563EB] text-white border-[#1D4ED8]"
+                                      : "bg-white text-[#0F172A] border-[#CBD5E1] hover:border-[#2563EB]"
+                                  }`}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#60A5FA]" />
+                                  <span className="font-mono tracking-tight">
+                                    {fp.label}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Gasto histórico acumulado y visitas */}
+                          <div className="mt-2.5 pt-2 border-t border-[#E2E8F0] flex items-center justify-between text-[11px]">
+                            <span className="text-slate-500 font-medium">
+                              {clientVeh.historicalServices} intervenciones
+                              registradas
+                            </span>
+                            <span className="font-extrabold text-[#1D4ED8]">
+                              Histórico: {formatARS(accumulatedSpend)}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* COLUMNA DERECHA (8 COLUMNAS - FICHA DEL VEHÍCULO, QR DE HISTORIAL Y TRAZADO HISTÓRICO) */}
+                <div className="lg:col-span-8 flex flex-col gap-3 min-h-0 overflow-hidden">
+                  {/* ENCABEZADO FIJO DEL VEHÍCULO + QR DE HISTORIAL CLÍNICO */}
+                  <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xs p-3.5 shrink-0">
+                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-3.5 items-stretch">
+                      {/* Datos del propietario, Chapa Patente Mercosur, VIN, Motor y Próximo Service */}
+                      <div className="xl:col-span-7 flex flex-col justify-between gap-2.5">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200">
+                                Legajo Clínico Vehicular
+                              </span>
+                              <span className="text-[11px] font-bold text-slate-500">
+                                {activeVehicle.ownerName} (DNI{" "}
+                                {activeVehicle.ownerDni || "34.812.904"})
+                              </span>
+                            </div>
+                            <h2 className="text-lg font-black text-[#0F172A] tracking-tight mt-1">
+                              {activeVehicle.model} ({activeVehicle.year}) ·{" "}
+                              <span className="text-[#1D4ED8]">
+                                {activeVehicle.engineSpec}
+                              </span>
+                            </h2>
+                          </div>
+                          <MercosurPlateBadge plate={activeVehicle.plate} />
                         </div>
 
-                        <div className="p-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between gap-2">
-                          <div>
-                            <p className="text-xs font-extrabold text-[#0F172A]">
-                              {v.model} ({v.year})
-                            </p>
-                            <p className="text-[11px] text-slate-500">
-                              {v.mileage} · {v.engineSpec}
-                            </p>
+                        {/* Grilla de especificaciones clínicas (VIN/Chasis, Kilometraje, Visitas, Orden Activa) */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[9px] font-bold uppercase text-slate-400 block">
+                              VIN / Chasis
+                            </span>
+                            <span className="font-mono text-[11px] font-extrabold text-[#0F172A] truncate block mt-0.5">
+                              {activeVehicle.vin || "8AFZZZFFCHJ409218"}
+                            </span>
                           </div>
-                          <MercosurPlateBadge plate={v.plate} size="sm" />
+                          <div className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[9px] font-bold uppercase text-slate-400 block">
+                              Odómetro Actual
+                            </span>
+                            <span className="text-xs font-extrabold text-[#1D4ED8] block mt-0.5">
+                              {activeVehicle.mileage}
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[9px] font-bold uppercase text-slate-400 block">
+                              Contacto Titular
+                            </span>
+                            <span className="text-[11px] font-bold text-[#0F172A] truncate block mt-0.5">
+                              {activeVehicle.phone}
+                            </span>
+                          </div>
+                          <div className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0]">
+                            <span className="text-[9px] font-bold uppercase text-slate-400 block">
+                              Estado en Taller
+                            </span>
+                            <span className="text-[11px] font-extrabold text-[#2563EB] truncate block mt-0.5">
+                              {currentStage.label} ({currentStage.percentage}%)
+                            </span>
+                          </div>
                         </div>
 
-                        <div className="flex justify-between text-xs pt-1">
-                          <span className="text-slate-500">Orden activa:</span>
-                          <span className="font-extrabold text-[#1D4ED8]">
-                            {st.label} · {formatARS(budget)}
-                          </span>
+                        {/* Resumen de Próximo Service Recomendado */}
+                        <div className="px-3 py-2 rounded-xl bg-[#EFF6FF] border border-blue-200 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Calendar className="w-4 h-4 text-[#2563EB] shrink-0" />
+                            <p className="text-xs font-bold text-[#0F172A] truncate">
+                              <span className="text-[#1D4ED8] font-extrabold uppercase text-[10px] mr-1.5">
+                                Próximo Service Recomendado:
+                              </span>
+                              {activeVehicle.nextRecommendedService ||
+                                "Próximo cambio de aceite a los 78.400 km"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setActiveTab("Órdenes de Trabajo")}
+                            className="text-[10px] font-extrabold text-[#1D4ED8] hover:text-[#2563EB] underline shrink-0 cursor-pointer"
+                          >
+                            Ir a OT →
+                          </button>
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedVehicleId(v.id);
-                          setActiveTab("Órdenes de Trabajo");
-                        }}
-                        className="w-full py-2 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-bold cursor-pointer"
-                      >
-                        Abrir Estación de Trabajo →
-                      </button>
+                      {/* TARJETA DESTACADA: PASAPORTE QR · HISTORIAL CLÍNICO */}
+                      <div className="xl:col-span-5 rounded-xl bg-gradient-to-br from-[#EFF6FF] via-white to-[#F8FAFC] border-2 border-[#2563EB]/30 p-3 flex flex-col justify-between gap-2.5">
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="space-y-1 min-w-0">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#2563EB] text-white text-[9px] font-extrabold uppercase tracking-wider">
+                              <QrCode className="w-3 h-3" />
+                              PASAPORTE QR · HISTORIAL CLÍNICO
+                            </span>
+                            <p className="text-[11px] font-bold text-[#0F172A] leading-snug">
+                              Trazabilidad de por vida del vehículo para
+                              guantera o parabrisas.
+                            </p>
+                            <p className="font-mono text-[10px] font-bold text-[#1D4ED8] truncate">
+                              {dynamicClientHistoryUrl}
+                            </p>
+                          </div>
+
+                          <RealisticQrCode
+                            value={dynamicClientHistoryUrl}
+                            size={80}
+                            sizeClass="w-20 h-20"
+                            imageSettings={{
+                              src: "/SVG_redondo.svg",
+                              width: 28,
+                              height: 28,
+                              excavate: true,
+                            }}
+                          />
+                        </div>
+
+                        {/* Botonera del Pasaporte QR */}
+                        <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-blue-200/70">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPhoneSimulatorTab("historial");
+                              setIsClientDrawerOpen(true);
+                            }}
+                            className="col-span-3 sm:col-span-1 py-1.5 px-2 rounded-lg bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-2xs cursor-pointer"
+                          >
+                            <span>📱 Abrir Historial Cliente</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowQrStickerModal(true)}
+                            className="py-1.5 px-2 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#0F172A] border border-[#CBD5E1] text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <Printer className="w-3 h-3 text-[#2563EB] shrink-0" />
+                            <span className="truncate">
+                              Imprimir Sticker Guantera/Parabrisas
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCopyHistoryUrl}
+                            className="py-1.5 px-2 rounded-lg bg-white hover:bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                            <span>Copiar Link</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  );
-                })}
+                  </div>
+
+                  {/* LÍNEA DE TIEMPO DEL HISTORIAL CLÍNICO DE REPARACIONES (TIMELINE HISTÓRICO) */}
+                  <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-xs p-3.5 flex-1 min-h-0 flex flex-col overflow-hidden">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#E2E8F0] shrink-0">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#EFF6FF] text-[#2563EB] flex items-center justify-center border border-blue-200">
+                          <FileText className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-xs sm:text-sm font-black text-[#0F172A]">
+                            Historial Clínico Completo de Intervenciones (
+                            {(activeVehicle.serviceHistory || []).length}{" "}
+                            visitas)
+                          </h3>
+                          <p className="text-[11px] text-slate-500">
+                            Trazabilidad real de kilometraje, repuestos
+                            instalados y garantía certificada BoxBox
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={activeClientHistoryPath}
+                          target="_blank"
+                          className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFC] hover:bg-[#EFF6FF] text-[#1D4ED8] border border-[#E2E8F0] text-[11px] font-bold inline-flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>Vista Pública QR</span>
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowAddHistoryForm((prev) => !prev)
+                          }
+                          className="px-3 py-1.5 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[11px] font-extrabold inline-flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>+ Registrar Mantenimiento Histórico</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Formulario inline rápido para registrar un nuevo mantenimiento histórico */}
+                    {showAddHistoryForm && (
+                      <form
+                        onSubmit={handleAddHistoricalService}
+                        className="my-2.5 p-3 rounded-xl bg-[#EFF6FF]/80 border border-blue-200 grid grid-cols-1 sm:grid-cols-12 gap-2 items-end shrink-0"
+                      >
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block mb-1">
+                            Kilometraje
+                          </label>
+                          <input
+                            type="text"
+                            value={histMileage}
+                            onChange={(e) => setHistMileage(e.target.value)}
+                            placeholder={activeVehicle.mileage}
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white border border-blue-200 text-[#0F172A]"
+                          />
+                        </div>
+                        <div className="sm:col-span-4">
+                          <label className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block mb-1">
+                            Servicio / Diagnóstico Realizado
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={histTitle}
+                            onChange={(e) => setHistTitle(e.target.value)}
+                            placeholder="Ej: Service 70.000 km + Bujías"
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white border border-blue-200 text-[#0F172A]"
+                          />
+                        </div>
+                        <div className="sm:col-span-3">
+                          <label className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block mb-1">
+                            Repuestos (sep. por coma)
+                          </label>
+                          <input
+                            type="text"
+                            value={histParts}
+                            onChange={(e) => setHistParts(e.target.value)}
+                            placeholder="Aceite 5W-30, Filtro Aire"
+                            className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white border border-blue-200 text-[#0F172A]"
+                          />
+                        </div>
+                        <div className="sm:col-span-3 flex items-center gap-1.5">
+                          <div className="flex-1">
+                            <label className="text-[10px] font-extrabold uppercase text-[#1D4ED8] block mb-1">
+                              Costo ARS
+                            </label>
+                            <input
+                              type="number"
+                              value={histCost}
+                              onChange={(e) => setHistCost(e.target.value)}
+                              placeholder="165000"
+                              className="w-full px-2.5 py-1.5 text-xs rounded-lg bg-white border border-blue-200 text-[#0F172A]"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            className="px-3 py-1.5 rounded-lg bg-[#1D4ED8] hover:bg-[#2563EB] text-white text-xs font-extrabold cursor-pointer mt-4"
+                          >
+                            Guardar
+                          </button>
+                        </div>
+                      </form>
+                    )}
+
+                    {/* Timeline cronológico con scroll interno limpio */}
+                    <div className="flex-1 min-h-0 overflow-y-auto pr-1 pt-2.5 space-y-2.5">
+                      {(activeVehicle.serviceHistory || []).map(
+                        (record, idx) => (
+                          <div
+                            key={record.id}
+                            className={`p-3.5 rounded-xl border transition-all ${
+                              record.isCurrentOrder || idx === 0
+                                ? "bg-[#EFF6FF]/60 border-2 border-[#2563EB]/40 shadow-2xs"
+                                : "bg-[#F8FAFC] border-[#E2E8F0]"
+                            }`}
+                          >
+                            <div className="flex flex-wrap items-start justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span
+                                  className={`font-mono text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
+                                    record.isCurrentOrder
+                                      ? "bg-[#2563EB] text-white"
+                                      : "bg-white text-[#1D4ED8] border border-blue-200"
+                                  }`}
+                                >
+                                  {record.date} · {record.orderNumber}
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-white border border-[#CBD5E1] text-[11px] font-extrabold text-[#0F172A]">
+                                  <Gauge className="w-3.5 h-3.5 text-[#2563EB]" />
+                                  {record.mileage}
+                                </span>
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#1D4ED8] border border-blue-200 text-[10px] font-bold">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-[#2563EB]" />
+                                  {record.warrantyLabel}
+                                </span>
+                              </div>
+
+                              <div className="text-right">
+                                <span className="text-[10px] font-bold uppercase text-slate-400 block leading-none">
+                                  Total Facturado
+                                </span>
+                                <span className="text-sm font-black text-[#1D4ED8]">
+                                  {formatARS(record.totalBilled)}
+                                </span>
+                              </div>
+                            </div>
+
+                            <h4 className="text-sm font-extrabold text-[#0F172A] mt-2">
+                              {record.serviceTitle}
+                            </h4>
+                            <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                              {record.diagnosisSummary}
+                            </p>
+
+                            <div className="mt-2.5 pt-2 border-t border-[#E2E8F0] flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-extrabold uppercase text-slate-400 mr-1">
+                                  Repuestos:
+                                </span>
+                                {record.installedParts.map((part, pIdx) => (
+                                  <span
+                                    key={pIdx}
+                                    className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white border border-[#E2E8F0] text-[#0F172A]"
+                                  >
+                                    {part}
+                                  </span>
+                                ))}
+                              </div>
+
+                              <span className="text-[11px] font-bold text-slate-500">
+                                Mecánico a cargo:{" "}
+                                <strong className="text-[#0F172A]">
+                                  {record.mechanic}
+                                </strong>
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </main>
 
-          {/* ================= 5. SIMULADOR MÓVIL DEL CLIENTE (DRAWER RESPONSIVO) ================= */}
+          {/* ================= 5. SIMULADOR MÓVIL DEL CLIENTE (DRAWER RESPONSIVO CON 2 PESTAÑAS) ================= */}
           {isClientDrawerOpen && (
             <>
               <div
@@ -3024,7 +3763,7 @@ export default function MecaniQDashboard() {
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-pulse" />
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#0F172A]">
-                        Vista del Cliente (En Vivo)
+                        Vista del Cliente (QR en Vivo)
                       </h3>
                     </div>
 
@@ -3054,12 +3793,12 @@ export default function MecaniQDashboard() {
 
                   {/* Smartphone Mockup Scaled for Mobile & Desktop */}
                   <div className="flex flex-col items-center">
-                    <div className="w-full max-w-[285px] scale-95 sm:scale-100 origin-top bg-[#0F172A] rounded-[38px] p-2.5 shadow-xl border-4 border-slate-800 relative">
+                    <div className="w-full max-w-[292px] scale-95 sm:scale-100 origin-top bg-[#0F172A] rounded-[38px] p-2.5 shadow-xl border-4 border-slate-800 relative">
                       <div className="w-24 h-4 bg-[#0F172A] rounded-b-xl mx-auto absolute top-2.5 left-1/2 -translate-x-1/2 z-20 flex items-center justify-center">
                         <div className="w-8 h-1 bg-slate-700 rounded-full" />
                       </div>
 
-                      <div className="bg-white rounded-[28px] pt-6 pb-3.5 px-3.5 text-center flex flex-col justify-between min-h-[430px] relative overflow-hidden">
+                      <div className="bg-white rounded-[28px] pt-6 pb-3.5 px-3 text-center flex flex-col justify-between min-h-[450px] relative overflow-hidden">
                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 px-1 mb-1">
                           <span>9:41</span>
                           <span className="inline-flex items-center gap-1 text-[#2563EB] font-extrabold">
@@ -3074,11 +3813,11 @@ export default function MecaniQDashboard() {
                         </div>
 
                         <div className="space-y-1">
-                          <h4 className="text-base font-black text-[#0F172A]">
+                          <h4 className="text-sm font-black text-[#0F172A]">
                             ¡HOLA {activeVehicle.ownerFirstName}!
                           </h4>
-                          <p className="text-xs font-bold text-slate-600">
-                            Tu {activeVehicle.model}
+                          <p className="text-[11px] font-bold text-slate-600">
+                            {activeVehicle.model} ({activeVehicle.year})
                           </p>
                           <div className="flex justify-center">
                             <MercosurPlateBadge
@@ -3088,95 +3827,182 @@ export default function MecaniQDashboard() {
                           </div>
                         </div>
 
-                        <div className="my-2 py-2 px-2.5 rounded-xl bg-[#EFF6FF] border border-blue-200">
-                          <p className="text-xs font-extrabold text-[#1D4ED8] uppercase">
-                            {currentStage.label} ({currentStage.percentage}%)
-                          </p>
-                          <p className="text-[10px] font-medium text-slate-600">
-                            ({activeVehicle.activeComponent})
-                          </p>
-                          <div className="w-full h-1.5 bg-blue-200/70 rounded-full overflow-hidden mt-1.5">
-                            <div
-                              style={{ width: `${currentStage.percentage}%` }}
-                              className="h-full bg-[#2563EB] transition-all duration-500 rounded-full"
-                            />
-                          </div>
+                        {/* 2 PESTAÑAS SUPERIORES EN LA PANTALLA DEL CELULAR */}
+                        <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 border border-[#E2E8F0] my-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setPhoneSimulatorTab("vivo")}
+                            className={`py-1.5 px-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                              phoneSimulatorTab === "vivo"
+                                ? "bg-[#2563EB] text-white shadow-2xs"
+                                : "text-slate-600 hover:text-[#0F172A]"
+                            }`}
+                          >
+                            ⚡ Reparación en Vivo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPhoneSimulatorTab("historial")}
+                            className={`py-1.5 px-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                              phoneSimulatorTab === "historial"
+                                ? "bg-[#2563EB] text-white shadow-2xs"
+                                : "text-slate-600 hover:text-[#0F172A]"
+                            }`}
+                          >
+                            📋 Historial Clínico
+                          </button>
                         </div>
 
-                        {!showBudgetInPhone ? (
-                          <div className="relative rounded-xl overflow-hidden border border-[#E2E8F0] my-1">
-                            <img
-                              src={activeVehicle.photoUrl}
-                              alt={activeVehicle.photoCaption}
-                              className="w-full h-28 object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-transparent to-transparent flex items-end p-2">
-                              <p className="text-[10px] text-white font-medium line-clamp-1">
-                                {activeVehicle.photoCaption}
+                        {phoneSimulatorTab === "vivo" ? (
+                          <>
+                            <div className="my-1 py-2 px-2.5 rounded-xl bg-[#EFF6FF] border border-blue-200">
+                              <p className="text-xs font-extrabold text-[#1D4ED8] uppercase">
+                                {currentStage.label} ({currentStage.percentage}
+                                %)
+                              </p>
+                              <p className="text-[10px] font-medium text-slate-600">
+                                ({activeVehicle.activeComponent})
+                              </p>
+                              <div className="w-full h-1.5 bg-blue-200/70 rounded-full overflow-hidden mt-1.5">
+                                <div
+                                  style={{
+                                    width: `${currentStage.percentage}%`,
+                                  }}
+                                  className="h-full bg-[#2563EB] transition-all duration-500 rounded-full"
+                                />
+                              </div>
+                            </div>
+
+                            {!showBudgetInPhone ? (
+                              <div className="relative rounded-xl overflow-hidden border border-[#E2E8F0] my-1">
+                                <img
+                                  src={activeVehicle.photoUrl}
+                                  alt={activeVehicle.photoCaption}
+                                  className="w-full h-24 object-cover"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/85 via-transparent to-transparent flex items-end p-2">
+                                  <p className="text-[10px] text-white font-medium line-clamp-1">
+                                    {activeVehicle.photoCaption}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="my-1 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-2 text-left max-h-28 overflow-y-auto">
+                                <div className="flex items-center justify-between pb-1 mb-1 border-b border-[#E2E8F0]">
+                                  <span className="text-[10px] font-extrabold uppercase text-[#0F172A]">
+                                    Presupuesto
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowBudgetInPhone(false)}
+                                    className="text-[10px] font-bold text-[#2563EB] flex items-center gap-0.5 cursor-pointer"
+                                  >
+                                    <ArrowLeft className="w-2.5 h-2.5" /> Foto
+                                  </button>
+                                </div>
+                                <div className="space-y-1">
+                                  {activeVehicle.parts.map((p) => (
+                                    <div
+                                      key={p.id}
+                                      className="flex justify-between text-[10px]"
+                                    >
+                                      <span className="font-semibold text-[#0F172A] truncate pr-1">
+                                        {p.description} x{p.quantity}
+                                      </span>
+                                      <span className="font-bold text-[#1D4ED8] shrink-0">
+                                        {formatARS(p.quantity * p.unitPrice)}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            <div className="my-1">
+                              <p className="text-[10px] text-slate-500">
+                                Entrega estimada:{" "}
+                                <strong className="text-[#0F172A]">
+                                  {activeVehicle.estimatedDelivery}
+                                </strong>
                               </p>
                             </div>
-                          </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setShowBudgetInPhone((prev) => !prev)
+                              }
+                              className="w-full py-2 px-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs cursor-pointer"
+                            >
+                              {showBudgetInPhone
+                                ? `Ocultar (${formatARS(totalBudget)})`
+                                : `Ver Presupuesto (${formatARS(totalBudget)})`}
+                            </button>
+                          </>
                         ) : (
-                          <div className="my-1 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] p-2.5 text-left max-h-32 overflow-y-auto">
-                            <div className="flex items-center justify-between pb-1 mb-1 border-b border-[#E2E8F0]">
-                              <span className="text-[10px] font-extrabold uppercase text-[#0F172A]">
-                                Presupuesto
+                          <div className="flex-1 flex flex-col justify-between text-left my-1 space-y-1.5 overflow-hidden">
+                            <div className="p-2 rounded-xl bg-[#EFF6FF] border border-blue-200 flex items-center justify-between">
+                              <span className="text-[10px] font-extrabold text-[#1D4ED8] uppercase">
+                                Pasaporte Clínico BoxBox
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => setShowBudgetInPhone(false)}
-                                className="text-[10px] font-bold text-[#2563EB] flex items-center gap-0.5 cursor-pointer"
-                              >
-                                <ArrowLeft className="w-2.5 h-2.5" /> Foto
-                              </button>
+                              <span className="font-mono text-[10px] font-bold text-[#0F172A]">
+                                {activeVehicle.mileage}
+                              </span>
                             </div>
-                            <div className="space-y-1">
-                              {activeVehicle.parts.map((p) => (
-                                <div
-                                  key={p.id}
-                                  className="flex justify-between text-[10px]"
-                                >
-                                  <span className="font-semibold text-[#0F172A] truncate pr-1">
-                                    {p.description} x{p.quantity}
-                                  </span>
-                                  <span className="font-bold text-[#1D4ED8] shrink-0">
-                                    {formatARS(p.quantity * p.unitPrice)}
-                                  </span>
-                                </div>
-                              ))}
+
+                            <div className="space-y-1.5 max-h-44 overflow-y-auto pr-0.5">
+                              {(activeVehicle.serviceHistory || []).map(
+                                (rec) => (
+                                  <div
+                                    key={rec.id}
+                                    className="p-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] space-y-0.5"
+                                  >
+                                    <div className="flex items-center justify-between text-[9px] font-bold text-[#1D4ED8]">
+                                      <span>{rec.date}</span>
+                                      <span className="font-mono">
+                                        {rec.mileage}
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] font-extrabold text-[#0F172A] leading-tight">
+                                      {rec.serviceTitle}
+                                    </p>
+                                    <div className="flex items-center justify-between text-[9px] pt-0.5">
+                                      <span className="text-slate-500 truncate pr-1">
+                                        ✓ Garantía BoxBox
+                                      </span>
+                                      <span className="font-extrabold text-[#1D4ED8] shrink-0">
+                                        {formatARS(rec.totalBilled)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+
+                            <div className="p-1.5 rounded-lg bg-[#EFF6FF] border border-blue-200 text-[9px] font-bold text-[#1D4ED8] text-center truncate">
+                              {activeVehicle.nextRecommendedService}
                             </div>
                           </div>
                         )}
-
-                        <div className="my-1">
-                          <p className="text-[10px] text-slate-500">
-                            Entrega estimada:{" "}
-                            <strong className="text-[#0F172A]">
-                              {activeVehicle.estimatedDelivery}
-                            </strong>
-                          </p>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => setShowBudgetInPhone((prev) => !prev)}
-                          className="w-full py-2 px-3 rounded-xl bg-[#2563EB] hover:bg-[#1D4ED8] text-white font-bold text-xs cursor-pointer"
-                        >
-                          {showBudgetInPhone
-                            ? `Ocultar (${formatARS(totalBudget)})`
-                            : `Ver Presupuesto (${formatARS(totalBudget)})`}
-                        </button>
                       </div>
                     </div>
 
-                    <div className="mt-2.5 w-full max-w-[285px] space-y-2">
+                    <div className="mt-2.5 w-full max-w-[292px] space-y-2">
                       <Link
-                        href={activeClientPath}
+                        href={
+                          phoneSimulatorTab === "historial"
+                            ? activeClientHistoryPath
+                            : activeClientPath
+                        }
                         target="_blank"
                         className="w-full py-2 px-3 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-[#1D4ED8] border border-blue-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Abrir /client/{activePlateSlug} en Vivo</span>
+                        <span>
+                          {phoneSimulatorTab === "historial"
+                            ? `Abrir Historial /client/${activePlateSlug}`
+                            : `Abrir /client/${activePlateSlug} en Vivo`}
+                        </span>
                       </Link>
                       <button
                         type="button"
